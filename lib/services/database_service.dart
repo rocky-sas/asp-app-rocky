@@ -117,8 +117,7 @@ class DatabaseService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('ruta_csv_guardada', file.path);
 
-    print(
-        "[DatabaseService] 🧾 Tamaño del archivo leído: ${await file.length()} bytes");
+    print("[DatabaseService] 🧾 Tamaño del archivo leído: ${await file.length()} bytes");
 
     _csvFile = file;
     return await _readCsv(file);

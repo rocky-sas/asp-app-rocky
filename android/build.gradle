@@ -1,8 +1,18 @@
-ext {
-    compileSdkVersion = 35
-    minSdkVersion = 21
-    targetSdkVersion = 35
-    kotlinVersion = '1.9.10'
+buildscript {
+    ext {
+        compileSdkVersion = 35
+        minSdkVersion = 23
+        targetSdkVersion = 35
+        kotlin_version = '2.1.0'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.6.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
 
 allprojects {

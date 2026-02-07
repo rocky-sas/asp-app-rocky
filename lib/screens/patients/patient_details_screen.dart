@@ -8,6 +8,7 @@ import 'package:rocky_offline_sdk/services/database_service.dart';
 import 'package:rocky_offline_sdk/utils/bluetooth_printer_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 /// Pantalla de detalle de paciente con capacidades de impresión Bluetooth.
 ///
@@ -17,7 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// * Imprimir la información mediante una impresora térmica Bluetooth
 /// * Enviar la información por WhatsApp al paciente
 /// * Gestionar la conexión con dispositivos Bluetooth
-/// 
+///
 /// Características principales:
 /// * Interfaz clara y organizada para visualizar todos los datos del paciente
 /// * Manejo completo del ciclo de vida de conexiones Bluetooth
@@ -25,7 +26,7 @@ import 'package:url_launcher/url_launcher.dart';
 /// * Impresión de comprobantes con formato personalizado
 /// * Marcado automático del paciente como contactado en la base de datos
 /// * Capacidad para enviar información por WhatsApp
-/// 
+///
 /// El diseño implementa:
 /// * Gestión de estados para mostrar progreso de acciones
 /// * Manejo de errores y reconexión con dispositivos Bluetooth
@@ -44,28 +45,28 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
     with WidgetsBindingObserver {
   /// Instancia del controlador Bluetooth para impresoras térmicas
   final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
-  
+
   /// Dispositivo Bluetooth seleccionado para la impresión
   BluetoothDevice? selectedPrinter;
-  
+
   /// Bandera que indica si la conexión con el dispositivo Bluetooth falló
   bool _conexionFallida = false;
-  
+
   /// Bandera que indica si hay una conexión activa con un dispositivo Bluetooth
   bool _bluetoothConectado = false;
-  
+
   /// Bandera que indica si se está ejecutando un proceso de impresión
   bool _isPrinting = false;
-  
+
   /// Suscripción al stream de cambios de estado del Bluetooth
   StreamSubscription<int?>? _btStateSubscription;
 
   /// Muestra un diálogo modal con dos acciones posibles.
-  /// 
+  ///
   /// Este método crea y presenta un diálogo modal con opciones de acciones
   /// primaria y secundaria, permitiendo al usuario tomar decisiones sobre
   /// operaciones relacionadas con el Bluetooth u otras funcionalidades.
-  /// 
+  ///
   /// Parámetros:
   /// - [context]: El BuildContext para mostrar el diálogo
   /// - [mensaje]: El texto detallado a mostrar en el diálogo
@@ -77,6 +78,34 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   ///
   /// Retorna un Future<bool?> que será true si el usuario selecciona la acción primaria,
   /// false si selecciona la acción secundaria, o null si cierra el diálogo sin seleccionar.
+
+  String tiempoTranscurrido(DateTime fecha) {
+    final ahora = DateTime.now();
+
+    int years = ahora.year - fecha.year;
+    int months = ahora.month - fecha.month;
+    int days = ahora.day - fecha.day;
+
+    if (days < 0) {
+      months--;
+      final ultimoDiaMesAnterior = DateTime(ahora.year, ahora.month, 0).day;
+      days += ultimoDiaMesAnterior;
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    if (years > 0) {
+      return "Hace $years año(s) y $months mes(es)";
+    } else if (months > 0) {
+      return "Hace $months mes(es) y $days día(s)";
+    } else {
+      return "Hace $days día(s)";
+    }
+  }
+
   Future<bool?> mostrarMensajeModalAcciones({
     required BuildContext context,
     required String mensaje,
@@ -176,7 +205,7 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   }
 
   /// Verifica el estado inicial de la conexión Bluetooth.
-  /// 
+  ///
   /// Este método se ejecuta al iniciar la pantalla y:
   /// 1. Comprueba si hay una conexión activa con una impresora Bluetooth
   /// 2. Configura un listener para detectar cambios en el estado del Bluetooth
@@ -239,11 +268,11 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   }
 
   /// Responde a cambios en el ciclo de vida de la aplicación.
-  /// 
+  ///
   /// Este método se llama automáticamente cuando cambia el estado del ciclo de vida
   /// de la aplicación. Es especialmente útil para gestionar la conexión Bluetooth
   /// cuando la aplicación pasa a segundo plano y vuelve a primer plano.
-  /// 
+  ///
   /// Cuando la aplicación vuelve a primer plano (resumed):
   /// 1. Verifica el estado actual de la conexión Bluetooth
   /// 2. Intenta reconectar con la impresora seleccionada si es necesario
@@ -285,7 +314,7 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   }
 
   /// Inicializa la conexión Bluetooth y configura los dispositivos disponibles.
-  /// 
+  ///
   /// Este método realiza el proceso completo de conexión Bluetooth:
   /// 1. Verifica si ya existe una conexión activa
   /// 2. Solicita los permisos necesarios para Bluetooth
@@ -293,7 +322,7 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   /// 4. Configura listeners para cambios de estado
   /// 5. Intenta reconectar con el dispositivo anteriormente seleccionado
   /// 6. Muestra un selector de dispositivos si es necesario
-  /// 
+  ///
   /// @param mostrarDialogo Si es true, permite mostrar un selector de dispositivos
   /// @return Future que completa cuando finaliza el proceso de inicialización
   Future<void> _initBluetooth({bool mostrarDialogo = true}) async {
@@ -550,8 +579,7 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
         1,
         0,
       );
-      bluetooth.printCustom(
-          normalizeText("EDAD: ${p['EdadAnos']}"), 1, 0);
+      bluetooth.printCustom(normalizeText("EDAD: ${p['EdadAnos']}"), 1, 0);
       bluetooth.printNewLine();
       bluetooth.printCustom(
           normalizeText(
@@ -581,11 +609,11 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   }
 
   /// Normaliza el texto reemplazando caracteres acentuados por sus equivalentes sin acento.
-  /// 
-  /// Este método es necesario porque algunas impresoras térmicas Bluetooth no 
+  ///
+  /// Este método es necesario porque algunas impresoras térmicas Bluetooth no
   /// manejan correctamente los caracteres especiales o acentuados. Convierte
   /// caracteres como á, é, í, ó, ú, ñ a sus equivalentes sin acento (a, e, i, o, u, n).
-  /// 
+  ///
   /// @param input El texto original que puede contener caracteres acentuados
   /// @return El texto normalizado sin acentos
   String normalizeText(String input) {
@@ -709,6 +737,40 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
     final p = widget.paciente;
     // No se usa actualmente, pero se podría utilizar en la UI para mostrar el sexo del paciente
     // final sexoFormateado = (p['Sexo']?.toLowerCase() == 'f') ? 'Femenino' : 'Masculino';
+
+    DateTime? parseFecha(dynamic valor) {
+      if (valor == null) return null;
+
+      final fechaStr = valor.toString().trim();
+      if (fechaStr.isEmpty) return null;
+
+      try {
+        if (fechaStr.contains('/')) {
+          return DateFormat('dd/MM/yyyy').parse(fechaStr);
+        }
+        if (fechaStr.contains('-')) {
+          return DateFormat('dd-MM-yyyy').parse(fechaStr);
+        }
+      } catch (_) {
+        return null;
+      }
+
+      return null;
+    }
+
+    final fechaCitologia = parseFecha(p['Citologia']);
+    final fechaConCursoVida = parseFecha(p['ConCursoVida']);
+    final fechaSanOcuMatFe = parseFecha(p['SanOcuMatFe']);
+    final fechaHemoHemaJov = parseFecha(p['SanOcuMatFe']);
+    final fechaDetartaje = parseFecha(p['Detartaje']);
+    final fechaConPlaca = parseFecha(p['ConPlaca']);
+    final fechaFluor = parseFecha(p['Fluor']);
+    final fechaPaqLabs = parseFecha(p['PaqLabs']);
+    final fechaSellantes = parseFecha(p['Sellantes']);
+    final fechaConsOdont = parseFecha(p['ConsOdont']);
+    final fechaPlanFami = parseFecha(p['PlanFami']);
+
+
 
     return Scaffold(
       backgroundColor: const Color(0xFF007BFF),
@@ -971,6 +1033,92 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                               ? p['LaboratoriosPendientes'].toString()
                               : 'N/A',
                         ),
+                        Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              dividerColor:
+                                  Colors.transparent, 
+                            ),
+                            
+                            child: ExpansionTile(
+                                tilePadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                              leading: Icon(Icons.checklist, color: Colors.blue, size: 32,),
+                              title: const Text(
+                                "Actividades realizadas",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  
+                                ),
+                                
+                              ),
+                              
+                              childrenPadding: const EdgeInsets.all(16),
+                              
+                              children: [
+                                itemExamen(
+                                  nombre: "Citología",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaCitologia,
+                                ),
+                                itemExamen(
+                                  nombre: "Curso de vida",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaConCursoVida,
+                                ),
+                                itemExamen(
+                                  nombre: "S. O. Mat. Fe",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaSanOcuMatFe,
+                                ),
+                                itemExamen(
+                                  nombre: "Hemograma y hematocrito en jóvenes",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaHemoHemaJov,
+                                ),
+                                itemExamen(
+                                  nombre: "Detartaje",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaDetartaje,
+                                ),
+                                itemExamen(
+                                  nombre: "Control de placa",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaConPlaca,
+                                ),
+                                itemExamen(
+                                  nombre: "Fluor",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaFluor,
+                                ),
+                                itemExamen(
+                                  nombre: "Paquete de laboratorios",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaPaqLabs,
+                                ),
+                                itemExamen(
+                                  nombre: "Sellantes",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaSellantes,
+                                ),
+                                itemExamen(
+                                  nombre: "Consulta odontológica",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaConsOdont,
+                                ),
+                                itemExamen(
+                                  nombre: "Plan familiar",
+                                  icon: Icons.check_circle_outline,
+                                  fecha: fechaPlanFami,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         SizedBox(
                           width: double.infinity,
@@ -1132,6 +1280,51 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget itemExamen({
+    required String nombre,
+    required IconData icon,
+    required DateTime? fecha,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.green[300]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  nombre,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  fecha != null
+                      ? "Fecha: ${DateFormat('dd/MM/yyyy').format(fecha)}"
+                      : "Fecha: N/A",
+                  style: const TextStyle(fontSize: 13),
+                ),
+                if (fecha != null)
+                  Text(
+                    tiempoTranscurrido(fecha),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

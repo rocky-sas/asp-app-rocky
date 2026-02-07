@@ -272,7 +272,7 @@ class _FormScreenState extends State<FormScreen> {
                         'assets/images/imagenInicio.png',
                         width: 80,
                         height: 80,
-                      ),
+),
                       const Text(
                         'Gestión de inasistencia a actividades de la Resolución No.3280',
                         style: TextStyle(
@@ -437,8 +437,12 @@ class _FormScreenState extends State<FormScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // const Text(
+                //   "Rocky App • Versión 1.0",
+                //   style: TextStyle(color: Colors.white, fontSize: 12),
+                // ),
                 const Text(
-                  "Rocky App • Versión 1.0",
+                  "Ese Santiago de Tunja • Versión 1.0",
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],
