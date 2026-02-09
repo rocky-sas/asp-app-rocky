@@ -442,7 +442,7 @@ class _FormScreenState extends State<FormScreen> {
                 //   style: TextStyle(color: Colors.white, fontSize: 12),
                 // ),
                 const Text(
-                  "Ese Santiago de Tunja • Versión 1.0",
+                  "Rocky • Versión 1.1",
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],

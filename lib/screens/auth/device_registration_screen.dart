@@ -6,20 +6,21 @@ import 'package:http/http.dart' as http;
 import 'package:rocky_offline_sdk/screens/auth/device_validation_screen.dart';
 import 'package:rocky_offline_sdk/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rocky_offline_sdk/utils/helpers/network_helper.dart';
 
 /// Pantalla de registro de Instituciones Prestadoras de Servicios de Salud (IPS).
-/// 
+///
 /// Esta pantalla permite el registro inicial de una IPS en el dispositivo móvil.
 /// La pantalla solicita al usuario ingresar un código de IPS válido para registrar
 /// la aplicación en el sistema de validación de dispositivos.
-/// 
+///
 /// Funcionalidades principales:
 /// * Registro del código de IPS proporcionado por el proveedor
 /// * Validación del dispositivo contra el servidor de autenticación
 /// * Generación de clave única de registro para el dispositivo
 /// * Almacenamiento seguro de credenciales en SharedPreferences
 /// * Redirección automática a pantalla de login si el dispositivo ya está validado
-/// 
+///
 /// Flujo de trabajo:
 /// 1. Al iniciar, verifica si el dispositivo ya está validado
 /// 2. Si no está validado, muestra el formulario para ingresar código IPS
@@ -36,7 +37,7 @@ class RegistroIPSScreen extends StatefulWidget {
 class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   /// Controlador para el campo de texto del código IPS
   final TextEditingController codIPSController = TextEditingController();
-  
+
   /// Indicador de estado de carga para mostrar retroalimentación visual
   bool cargando = false;
 
@@ -47,12 +48,12 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Verifica si ya hay una validación guardada en SharedPreferences.
-  /// 
-  /// Este método se ejecuta al iniciar la pantalla y comprueba si existe 
+  ///
+  /// Este método se ejecuta al iniciar la pantalla y comprueba si existe
   /// información de validación previa en el almacenamiento local del dispositivo.
-  /// Si encuentra datos válidos (is_valid = "True"), redirige automáticamente 
+  /// Si encuentra datos válidos (is_valid = "True"), redirige automáticamente
   /// a la pantalla de login sin solicitar nuevamente el registro.
-  /// 
+  ///
   /// El flujo contempla la verificación del estado de montaje del widget
   /// para evitar errores de navegación cuando el componente ya no está montado.
   Future<void> _verificarValidacion() async {
@@ -73,13 +74,13 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Obtiene el identificador único del dispositivo.
-  /// 
+  ///
   /// Utiliza el plugin DeviceInfoPlus para recuperar el ID único del dispositivo
   /// según la plataforma en la que se ejecute la aplicación:
   /// - En Android: Retorna el ID único del dispositivo Android
   /// - En iOS: Retorna el identificador único para vendedor (IDFV)
   /// - En otras plataformas: Retorna "unknown"
-  /// 
+  ///
   /// Este identificador se utiliza para el registro y validación del dispositivo
   /// en el servidor, funcionando como parte de la clave de autenticación.
   Future<String> _obtenerDeviceId() async {
@@ -95,13 +96,13 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Obtiene el nombre legible del dispositivo.
-  /// 
+  ///
   /// Recopila información sobre el modelo y fabricante del dispositivo para
   /// mostrar un nombre amigable en el sistema:
   /// - En Android: Combina el fabricante y modelo (ej. "Samsung Galaxy S21")
   /// - En iOS: Utiliza el nombre de la máquina del sistema operativo
   /// - En otras plataformas: Retorna "Unknown Device"
-  /// 
+  ///
   /// Este nombre se envía al servidor durante el registro para identificar
   /// visualmente el dispositivo en el panel de administración.
   Future<String> _obtenerDeviceName() async {
@@ -118,7 +119,7 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Registra la aplicación con el servidor backend mediante una API REST.
-  /// 
+  ///
   /// Proceso completo de registro:
   /// 1. Valida que se haya ingresado un código IPS
   /// 2. Obtiene información del dispositivo (ID y nombre)
@@ -127,10 +128,10 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   ///    - Si es exitosa (201): Almacena localmente el código IPS, ID del dispositivo
   ///      y la clave generada por el servidor. Luego redirige a la pantalla de validación.
   ///    - Si falla: Muestra un mensaje de error apropiado.
-  /// 
+  ///
   /// Durante el proceso se actualiza el estado de carga (cargando) para
   /// proporcionar retroalimentación visual al usuario.
-  /// 
+  ///
   /// La función implementa manejo de errores para problemas de red, respuestas
   /// inesperadas del servidor y verifica el estado de montaje del widget para
   /// evitar actualizar el estado cuando el componente ya no está montado.
@@ -139,6 +140,16 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
     if (codIPS.isEmpty) {
       await mostrarMensajeModal(context, 'Por favor ingresa el código IPS',
           exito: false);
+      return;
+    }
+
+    final hasInternet = await NetworkHelper.hasInternet();
+    if (!hasInternet) {
+      await mostrarMensajeModal(
+        context,
+        'No hay conexión a internet. Verifique su red e intente nuevamente.',
+        exito: false,
+      );
       return;
     }
 
@@ -172,8 +183,8 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
         await prefs.setString('device_id', deviceId);
         await prefs.setString('generated_key', generatedKey);
 
-        await mostrarMensajeModal(
-            context, 'Aplicación registrada. Solicite contraseña a su proveedor',
+        await mostrarMensajeModal(context,
+            'Aplicación registrada. Solicite contraseña a su proveedor',
             exito: true);
 
         codIPSController.clear();
@@ -206,13 +217,13 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Muestra un diálogo modal con un mensaje personalizado.
-  /// 
+  ///
   /// Esta función crea y presenta un diálogo modal centralizado con un diseño
   /// consistente que incluye:
   /// - Un icono (check para éxito, error para fallo)
   /// - Un mensaje personalizado
   /// - Un botón de cierre
-  /// 
+  ///
   /// Parámetros:
   /// - [context]: El BuildContext para mostrar el diálogo
   /// - [mensaje]: El texto a mostrar en el diálogo
@@ -274,7 +285,7 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   }
 
   /// Construye la interfaz de usuario para la pantalla de registro.
-  /// 
+  ///
   /// Estructura de la UI:
   /// - Fondo con color azul corporativo
   /// - Contenedor central con bordes redondeados
@@ -283,7 +294,7 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
   /// - Campo de texto para ingresar el código IPS
   /// - Botón de acción "Registrar aplicación"
   /// - Indicador de carga durante el proceso de registro
-  /// 
+  ///
   /// El diseño implementa:
   /// - Diseño adaptable a diferentes tamaños de pantalla mediante SingleChildScrollView
   /// - Retroalimentación visual durante la carga (spinner en botón)
@@ -318,19 +329,19 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
                         height: 80,
                       ),
                       const Text(
-                          'Registro de IPS',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                        'Registro de IPS',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
+                      ),
                       const SizedBox(height: 15),
                       const Text(
-                          "Ingrese su código de IPS para registrar su aplicación",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.black54),
-                        ),
+                        "Ingrese su código de IPS para registrar su aplicación",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54),
+                      ),
                       const SizedBox(height: 20),
                       TextField(
                         controller: codIPSController,

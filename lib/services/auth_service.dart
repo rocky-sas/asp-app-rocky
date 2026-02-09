@@ -132,9 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final inputPassword = passwordController.text.trim();
       if (inputPassword.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor ingresa tu contraseña')),
-        );
+        await mostrarMensajeModal(context, 'Por favor ingresa la clave, no puede estar vacía.',
+            exito: false);
         return;
       }
 
@@ -142,17 +141,15 @@ class _LoginScreenState extends State<LoginScreen> {
       final storedData = prefs.getString('device_validation');
 
       if (storedData == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error: No hay datos de validación")),
-        );
+        await mostrarMensajeModal(context, 'Error: No hay datos de validación',
+            exito: false);
         return;
       }
 
       final data = jsonDecode(storedData);
       if (data["password"] != inputPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Contraseña incorrecta")),
-        );
+                  await mostrarMensajeModal(context, 'Contraseña incorrecta, vuelve a intentarlo.',
+          exito: false);
         return;
       }
 

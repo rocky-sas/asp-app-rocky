@@ -106,8 +106,10 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
 
     try {
       final response = await http.post(
+        // Uri.parse(
+        //     "https://b-rocky-intranet.onrender.com/api/v1/validate_key_device"),
         Uri.parse(
-            "https://b-rocky-intranet.onrender.com/api/v1/validate_key_device"),
+            "http://192.168.1.185:8000/api/v1/validate_key_device"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(
             {"cod_ips": codIPS, "device_id": deviceId, "key": clave}),
@@ -146,6 +148,7 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
           final errorData = jsonDecode(response.body);
           final mensajeError = errorData['mensaje'] ?? 'Error desconocido';
           await mostrarMensajeModal(context, mensajeError, exito: false);
+          // await mostrarMensajeModal(context, "Error de contraseña", exito: false);
         } catch (_) {
           if (!mounted) return;
           await mostrarMensajeModal(context, 'Error: ${response.body}',
