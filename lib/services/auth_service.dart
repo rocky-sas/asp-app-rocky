@@ -29,6 +29,31 @@ class LoginScreen extends StatefulWidget {
 /// - [mostrarSubtitulo]: si es `true`, mostrará un subtítulo adicional.
 /// - [subtitulo]: texto opcional que aparece debajo del mensaje principal.
 class _LoginScreenState extends State<LoginScreen> {
+
+    @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initScreen();
+    });
+  }
+
+    Future<void> _initScreen() async {
+    await _cargarDeviceId();
+  }
+
+  String deviceIdBackend = '---';
+
+  Future<void> _cargarDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedId = prefs.getString('id_device_backend');
+
+    if (!mounted) return;
+
+    setState(() {
+      deviceIdBackend = storedId ?? '---';
+    });
+  }
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
   bool _passwordVisible = false;
@@ -132,7 +157,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final inputPassword = passwordController.text.trim();
       if (inputPassword.isEmpty) {
-        await mostrarMensajeModal(context, 'Por favor ingresa la clave, no puede estar vacía.',
+        await mostrarMensajeModal(
+            context, 'Por favor ingresa la clave, no puede estar vacía.',
             exito: false);
         return;
       }
@@ -148,8 +174,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final data = jsonDecode(storedData);
       if (data["password"] != inputPassword) {
-                  await mostrarMensajeModal(context, 'Contraseña incorrecta, vuelve a intentarlo.',
-          exito: false);
+        await mostrarMensajeModal(
+            context, 'Contraseña incorrecta, vuelve a intentarlo.',
+            exito: false);
         return;
       }
 
@@ -287,6 +314,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+                const SizedBox(height: 16),
+                Text(
+                  "Rocky • Versión 1.1 • Id: $deviceIdBackend",
+                  style: const TextStyle(fontWeight: FontWeight.bold,color: Colors.white, fontSize: 12),
+                ),
           ],
         ),
       ),

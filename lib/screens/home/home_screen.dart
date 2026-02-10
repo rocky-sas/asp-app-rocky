@@ -12,14 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// * Cargar una base de datos desde un archivo CSV externo
 /// * Exportar la base de datos actual a un archivo CSV
 /// * Acceder al módulo de búsqueda y gestión de pacientes
-/// 
+///
 /// Características principales:
 /// * Carga automática de la última base de datos utilizada al iniciar la aplicación
 /// * Validación de la existencia y formato del archivo de base de datos
 /// * Manejo de permisos de almacenamiento para importación/exportación
 /// * Interfaz intuitiva con opciones claramente diferenciadas
 /// * Almacenamiento persistente de la ruta del archivo CSV mediante SharedPreferences
-/// 
+///
 /// Flujo de trabajo:
 /// 1. Al iniciar, verifica si existe una base de datos previamente cargada
 /// 2. Permite al usuario seleccionar entre cargar una nueva base de datos o acceder a la actual
@@ -34,8 +34,9 @@ class FormScreen extends StatefulWidget {
 /// Esta clave se utiliza consistentemente en toda la aplicación para acceder
 /// a la información de la ubicación del archivo de base de datos.
 const String kRutaGuardadaKey = 'ruta_csv_guardada';
+const String kRutaGuardadaKeySigires = 'ruta_csv_guardada_sigires';
 
-/// Estado de la pantalla principal FormScreen que gestiona la lógica y UI 
+/// Estado de la pantalla principal FormScreen que gestiona la lógica y UI
 /// para la carga, validación y navegación de la base de datos de pacientes.
 class _FormScreenState extends State<FormScreen> {
   /// Archivo CSV seleccionado que contiene la base de datos de pacientes.
@@ -44,13 +45,13 @@ class _FormScreenState extends State<FormScreen> {
   File? archivoSeleccionado;
 
   /// Muestra un diálogo modal personalizado con mensaje, título e icono.
-  /// 
+  ///
   /// Este método crea y presenta un diálogo modal con un diseño consistente que incluye:
   /// - Un título destacado para indicar el tipo de mensaje
   /// - Un icono que indica éxito o error según el parámetro [exito]
   /// - Un mensaje detallado
   /// - Un botón de aceptar para cerrar el diálogo
-  /// 
+  ///
   /// Parámetros:
   /// - [context]: El BuildContext para mostrar el diálogo
   /// - [mensaje]: El texto detallado a mostrar en el diálogo
@@ -123,6 +124,7 @@ class _FormScreenState extends State<FormScreen> {
       },
     );
   }
+
   @override
   void initState() {
     super.initState();
@@ -130,7 +132,7 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   /// Intenta cargar la última base de datos utilizada desde SharedPreferences.
-  /// 
+  ///
   /// Este método se ejecuta al iniciar la pantalla y verifica si existe una ruta
   /// guardada de una base de datos anterior. Si existe y el archivo está disponible,
   /// lo carga automáticamente.
@@ -144,13 +146,40 @@ class _FormScreenState extends State<FormScreen> {
       final existe = await archivo.exists();
       print('[DEBUG] _cargarRutaGuardada: archivo.exists = $existe');
       if (existe) {
-        print('[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
+        print(
+            '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
         await DatabaseService.loadCsvFile(archivo);
         setState(() {
           archivoSeleccionado = archivo;
         });
       } else {
-        print('[DEBUG] _cargarRutaGuardada: El archivo no existe en la ruta guardada');
+        print(
+            '[DEBUG] _cargarRutaGuardada: El archivo no existe en la ruta guardada');
+      }
+    } else {
+      print('[DEBUG] _cargarRutaGuardada: No hay ruta guardada');
+    }
+  }
+  //Cargar base de datos de sigires
+  Future<void> _cargarRutaGuardadaSigires() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rutaGuardadaSigires = prefs.getString(kRutaGuardadaKeySigires);
+    print('[DEBUG] _cargarRutaGuardada: rutaGuardada = $rutaGuardadaSigires');
+
+    if (rutaGuardadaSigires != null && rutaGuardadaSigires.isNotEmpty) {
+      final archivo = File(rutaGuardadaSigires);
+      final existe = await archivo.exists();
+      print('[DEBUG] _cargarRutaGuardada: archivo.exists = $existe');
+      if (existe) {
+        print(
+            '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
+        await DatabaseService.loadCsvFile(archivo);
+        setState(() {
+          archivoSeleccionado = archivo;
+        });
+      } else {
+        print(
+            '[DEBUG] _cargarRutaGuardada: El archivo no existe en la ruta guardada');
       }
     } else {
       print('[DEBUG] _cargarRutaGuardada: No hay ruta guardada');
@@ -158,31 +187,35 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   /// Valida la existencia de la base de datos y navega a la pantalla de búsqueda de pacientes.
-  /// 
-  /// Este método realiza una serie de validaciones antes de permitir el acceso 
+  ///
+  /// Este método realiza una serie de validaciones antes de permitir el acceso
   /// al módulo de búsqueda de pacientes:
   /// 1. Verifica si existe una ruta almacenada en SharedPreferences
   /// 2. Comprueba si el archivo existe físicamente en el dispositivo
   /// 3. Intenta cargar el archivo CSV mediante DatabaseService
   /// 4. Verifica que el archivo contenga datos de pacientes válidos
-  /// 
+  ///
   /// Si todas las validaciones son exitosas, actualiza el estado con el archivo seleccionado
   /// y navega a la pantalla de búsqueda de pacientes. En caso contrario, muestra
   /// mensajes de error apropiados mediante SnackBar.
-  /// 
+  ///
   /// El método incluye registros de depuración extensivos para facilitar la
   /// identificación de problemas durante el proceso.
   Future<void> _validarYIngresar() async {
     final prefs = await SharedPreferences.getInstance();
     final ruta = prefs.getString(kRutaGuardadaKey);
+    final rutaSigires = prefs.getString('ruta_csv_guardada_sigires');
 
     print("[DEBUG] _validarYIngresar: Ruta en SharedPreferences: $ruta");
 
     if (ruta == null || ruta.isEmpty) {
-      print("[DEBUG] _validarYIngresar: No hay ruta guardada en SharedPreferences.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Primero debes cargar una base de datos")),
-      );
+      print(
+          "[DEBUG] _validarYIngresar: No hay ruta guardada en SharedPreferences.");
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(content: Text("Primero debes cargar una base de datos")),
+      // );
+      await mostrarMensajeModal(
+          context, "Primero debes cargar una base de datos,", "Error", false);
       return;
     }
 
@@ -192,21 +225,19 @@ class _FormScreenState extends State<FormScreen> {
 
     if (!existe) {
       print("[DEBUG] _validarYIngresar: El archivo no existe en la ruta.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("El archivo de base de datos no existe.")),
-      );
+      await mostrarMensajeModal(
+          context, "El archivo de base de datos no existe.", "Error", false);
       return;
     }
 
-    print("[DEBUG] _validarYIngresar: Cargando base de datos desde: ${archivo.path}");
+    print(
+        "[DEBUG] _validarYIngresar: Cargando base de datos desde: ${archivo.path}");
     final cargaExitosa = await DatabaseService.loadCsvFile(archivo);
 
     if (!cargaExitosa) {
       print("[DEBUG] _validarYIngresar: Archivo CSV inválido o sin pacientes.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("El archivo CSV no contiene pacientes válidos.")),
-      );
+      await mostrarMensajeModal(context,
+          "El archivo CSV no contiene pacientes válidos.", "Error", false);
       return;
     }
 
@@ -222,7 +253,7 @@ class _FormScreenState extends State<FormScreen> {
   }
 
   /// Construye la interfaz de usuario para la pantalla principal.
-  /// 
+  ///
   /// Estructura de la UI:
   /// - Fondo con color azul corporativo
   /// - Contenedor central con bordes redondeados y sombra
@@ -234,12 +265,14 @@ class _FormScreenState extends State<FormScreen> {
   ///   * "Ingresar" para acceder al módulo de búsqueda de pacientes
   /// - Sección de advertencia sobre la vigencia de la base de datos
   /// - Información de versión de la aplicación
-  /// 
+  ///
   /// El diseño implementa:
   /// - ScrollView para asegurar compatibilidad con diferentes tamaños de pantalla
   /// - Diseño visual consistente con la identidad corporativa
   /// - Diferenciación visual clara entre las distintas acciones disponibles
   /// - Elementos informativos para guiar al usuario
+  ///
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -272,7 +305,7 @@ class _FormScreenState extends State<FormScreen> {
                         'assets/images/imagenInicio.png',
                         width: 80,
                         height: 80,
-),
+                      ),
                       const Text(
                         'Gestión de inasistencia a actividades de la Resolución No.3280',
                         style: TextStyle(
@@ -308,13 +341,16 @@ class _FormScreenState extends State<FormScreen> {
                             ),
                           );
 
-                          print('[DEBUG] Valor retornado de CargarBaseDatosScreen: $ruta');
+                          print(
+                              '[DEBUG] Valor retornado de CargarBaseDatosScreen: $ruta');
                           if (ruta != null) {
                             final archivo = File(ruta);
                             final existe = await archivo.exists();
-                            print('[DEBUG] Archivo retornado existe: $existe, path: ${archivo.path}');
+                            print(
+                                '[DEBUG] Archivo retornado existe: $existe, path: ${archivo.path}');
                             if (existe) {
-                              print('[DEBUG] Llamando a DatabaseService.loadCsvFile');
+                              print(
+                                  '[DEBUG] Llamando a DatabaseService.loadCsvFile');
                               await DatabaseService.loadCsvFile(archivo);
                               final prefs =
                                   await SharedPreferences.getInstance();
@@ -324,14 +360,16 @@ class _FormScreenState extends State<FormScreen> {
                                 archivoSeleccionado = archivo;
                               });
                             } else {
-                              print('[DEBUG] Archivo no encontrado tras selección');
+                              print(
+                                  '[DEBUG] Archivo no encontrado tras selección');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content: Text("Archivo no encontrado.")),
                               );
                             }
                           } else {
-                            print('[DEBUG] No se retornó ruta desde CargarBaseDatosScreen');
+                            print(
+                                '[DEBUG] No se retornó ruta desde CargarBaseDatosScreen');
                           }
                         },
                       ),
@@ -339,8 +377,10 @@ class _FormScreenState extends State<FormScreen> {
                       ElevatedButton.icon(
                         onPressed: () async {
                           // Solicitar permisos antes de exportar
-                          final status = await Permission.manageExternalStorage.request();
-                          final storageStatus = await Permission.storage.request();
+                          final status =
+                              await Permission.manageExternalStorage.request();
+                          final storageStatus =
+                              await Permission.storage.request();
                           if (status.isGranted || storageStatus.isGranted) {
                             final csvPath = await DatabaseService.exportCsv();
                             if (csvPath.isNotEmpty) {
@@ -423,8 +463,7 @@ class _FormScreenState extends State<FormScreen> {
                                   Expanded(
                                     child: Text(
                                       "La base de datos podrá ser cargada únicamente el día de la importación.",
-                                      style: TextStyle(
-                                          color: Colors.black),
+                                      style: TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],

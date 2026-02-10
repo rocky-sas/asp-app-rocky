@@ -147,7 +147,7 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
     if (!hasInternet) {
       await mostrarMensajeModal(
         context,
-        'No hay conexión a internet. Verifique su red e intente nuevamente.',
+        'No hay conexión a internet, verifica tu red e intenta nuevamente.',
         exito: false,
       );
       return;
@@ -166,8 +166,9 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
       };
 
       final response = await http.post(
-        Uri.parse(
-            "https://b-rocky-intranet.onrender.com/api/v1/view_generate_key_device"),
+        Uri.parse("http://192.168.1.185:8000/api/v1/view_generate_key_device"),
+        // Uri.parse(
+        //     "https://b-rocky-intranet.onrender.com/api/v1/view_generate_key_device"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
@@ -176,12 +177,11 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
         final data = jsonDecode(response.body);
         final generatedKey = data['clave'] ?? '';
 
-        print("Clave generada: $generatedKey");
-
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('cod_ips', codIPS);
         await prefs.setString('device_id', deviceId);
         await prefs.setString('generated_key', generatedKey);
+        await prefs.setString('id_device_backend', data["id_device"].toString());
 
         await mostrarMensajeModal(context,
             'Aplicación registrada. Solicite contraseña a su proveedor',
@@ -372,6 +372,15 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
                       )
                     ],
                   ),
+                ),
+                const SizedBox(height: 16),
+                // const Text(
+                //   "Rocky App • Versión 1.0",
+                //   style: TextStyle(color: Colors.white, fontSize: 12),
+                // ),
+                const Text(
+                  "Rocky • Versión 1.1",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],
             ),

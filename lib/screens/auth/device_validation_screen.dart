@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rocky_offline_sdk/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rocky_offline_sdk/utils/helpers/network_helper.dart';
 
 /// Pantalla de validación de contraseña del dispositivo.
-/// 
+///
 /// Esta pantalla maneja el proceso de validación de la clave generada para el dispositivo
 /// después del registro inicial de la IPS. Es la segunda etapa en el flujo de autenticación
 /// y seguridad del sistema.
-/// 
+///
 /// Funcionalidades principales:
 /// * Validación de la clave del dispositivo contra el servidor de autenticación
 /// * Almacenamiento seguro de la información de validación en SharedPreferences
 /// * Extracción y almacenamiento de datos adicionales como el número de teléfono
 /// * Redirección automática a la pantalla de login si ya está validado
 /// * Manejo de errores y retroalimentación visual al usuario
-/// 
+///
 /// Flujo de trabajo:
 /// 1. Al iniciar, verifica si el dispositivo ya ha sido validado previamente
 /// 2. Si no está validado, muestra la interfaz para ingresar la clave de validación
@@ -38,16 +39,23 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
   @override
   void initState() {
     super.initState();
-    _verificarValidacion();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initScreen();
+    });
+  }
+
+  Future<void> _initScreen() async {
+    await _cargarDeviceId();
+    await _verificarValidacion();
   }
 
   /// Verifica si el dispositivo ya ha sido validado previamente.
-  /// 
+  ///
   /// Este método consulta las preferencias compartidas para determinar
   /// si el dispositivo ya ha completado el proceso de validación.
-  /// Si encuentra que el dispositivo está validado (device_validated = true), 
+  /// Si encuentra que el dispositivo está validado (device_validated = true),
   /// redirige automáticamente a la pantalla de login, evitando pasos redundantes.
-  /// 
+  ///
   /// La verificación del estado de montaje (mounted) previene errores de navegación
   /// si el widget ya no está activo en la jerarquía de widgets.
   Future<void> _verificarValidacion() async {
@@ -55,7 +63,6 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
     final isValidated = prefs.getBool('device_validated') ?? false;
 
     if (isValidated && mounted) {
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -63,27 +70,39 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
     }
   }
 
-
   /// Valida la clave ingresada contra el servidor de autenticación.
-  /// 
+  ///
   /// Proceso completo de validación:
   /// 1. Recupera la información del dispositivo (código IPS y ID) de las preferencias
   /// 2. Valida que se haya ingresado una clave
   /// 3. Envía una solicitud POST al endpoint de validación de clave
   /// 4. Procesa la respuesta del servidor:
-  ///    - Si es exitosa (200): 
+  ///    - Si es exitosa (200):
   ///      * Almacena la respuesta completa en 'device_validation'
   ///      * Guarda la clave usada para validación futura
   ///      * Establece el flag 'device_validated' como true
   ///      * Extrae y almacena el número telefónico si está disponible
   ///      * Redirige a la pantalla de login
   ///    - Si falla: Muestra un mensaje de error apropiado
-  /// 
+  ///
   /// La función implementa verificaciones para:
   /// - Asegurar que exista información previa del dispositivo
   /// - Validar que el campo de clave no esté vacío
   /// - Verificar el estado de montaje del widget antes de actualizar la UI
   /// - Manejar errores de red y respuestas inesperadas del servidor
+  String deviceIdBackend = '---';
+
+  Future<void> _cargarDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedId = prefs.getString('id_device_backend');
+
+    if (!mounted) return;
+
+    setState(() {
+      deviceIdBackend = storedId ?? '---';
+    });
+  }
+
   Future<void> _validarClave() async {
     final prefs = await SharedPreferences.getInstance();
     final codIPS = prefs.getString('cod_ips');
@@ -103,13 +122,21 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
           exito: false);
       return;
     }
+    final hasInternet = await NetworkHelper.hasInternet();
+    if (!hasInternet) {
+      await mostrarMensajeModal(
+        context,
+        'No hay conexión a internet, verifica tu red e intenta nuevamente.',
+        exito: false,
+      );
+      return;
+    }
 
     try {
       final response = await http.post(
         // Uri.parse(
         //     "https://b-rocky-intranet.onrender.com/api/v1/validate_key_device"),
-        Uri.parse(
-            "http://192.168.1.185:8000/api/v1/validate_key_device"),
+        Uri.parse("http://192.168.1.185:8000/api/v1/validate_key_device"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(
             {"cod_ips": codIPS, "device_id": deviceId, "key": clave}),
@@ -126,10 +153,18 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
         // Guardar la clave para verificaciones futuras
         await prefs.setString('device_key', clave);
         await prefs.setBool('device_validated', true);
+        await prefs.setString('id_device', codIPS);
         // Guardar el phone_number por separado
         if (data['phone_number'] != null) {
-          await prefs.setString('phone_number', data['phone_number'].toString());
+          await prefs.setString(
+              'phone_number', data['phone_number'].toString());
         }
+
+        final storedDeviceId = prefs.getString('id_device_backend');
+        print(storedDeviceId);
+        setState(() {
+          deviceIdBackend = storedDeviceId ?? '';
+        });
 
         if (!mounted) return;
         await mostrarMensajeModal(
@@ -162,13 +197,13 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
   }
 
   /// Muestra un diálogo modal con un mensaje personalizado.
-  /// 
+  ///
   /// Esta función crea y presenta un diálogo modal centralizado con un diseño
   /// consistente que incluye:
   /// - Un icono (check para éxito, error para fallo)
   /// - Un mensaje personalizado
   /// - Un botón de cierre
-  /// 
+  ///
   /// Parámetros:
   /// - [context]: El BuildContext para mostrar el diálogo
   /// - [mensaje]: El texto a mostrar en el diálogo
@@ -230,7 +265,7 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
   }
 
   /// Construye la interfaz de usuario para la pantalla de validación.
-  /// 
+  ///
   /// Estructura de la UI:
   /// - Fondo con color azul corporativo
   /// - Contenedor central con bordes redondeados y sombra
@@ -239,12 +274,13 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
   /// - Campo para ingresar la clave de validación
   /// - Sección de información con notas importantes sobre la responsabilidad del usuario
   /// - Botón de acción "Guardar y continuar"
-  /// 
+  ///
   /// El diseño implementa:
   /// - Restricciones de tamaño máximo para mejor visualización en distintos dispositivos
   /// - ScrollView para asegurar compatibilidad con pantallas pequeñas
   /// - Diseño visual consistente con la identidad corporativa (colores, bordes, sombras)
   /// - Componentes de UI organizados para facilitar la comprensión y uso
+  ///
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -280,7 +316,11 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
                 const SizedBox(height: 16),
                 const Text(
                   "Validar dispositivo",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,color: Colors.black,),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -342,6 +382,11 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Rocky • Versión 1.1 • Id: $deviceIdBackend",
+                  style: const TextStyle(color: Colors.black, fontSize: 12),
                 ),
               ],
             ),

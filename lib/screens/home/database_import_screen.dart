@@ -27,8 +27,10 @@ class CargarBaseDatosScreen extends StatefulWidget {
 }
 
 class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
-  String? nombreArchivo;
-  String? rutaArchivoTemporal;
+  String? nombreArchivoDBRocky;
+  String? nombreArchivoDBSIGIRES;
+  String? rutaArchivoTemporalRocky;
+  String? rutaArchivoTemporalSIGIRES;
   bool _isPickerActive = false;
   bool isLoading = false;
 
@@ -194,7 +196,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
   /// - El nombre del archivo debe coincidir con el MD5 esperado.
   ///
   /// Si es válido, guarda el nombre y la ruta temporal en variables de estado.
-  Future<void> seleccionarArchivo() async {
+  Future<void> seleccionarArchivoRocky() async {
     if (_isPickerActive) {
       return;
     }
@@ -240,15 +242,88 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
         if (fileName.toLowerCase() != expectedFileName.toLowerCase()) {
           if (mounted) {
             await mostrarMensajeModal(context,
-                "El nombre del archivo no es válido para la fecha actual",
+                "El nombre del archivo no es válido para la fecha actual. Asegúrate de que el archivo sea el correcto.",
                 exito: false);
           }
           return;
         }
 
         setState(() {
-          nombreArchivo = fileName;
-          rutaArchivoTemporal = filePath;
+          nombreArchivoDBRocky = fileName;
+          rutaArchivoTemporalRocky = filePath;
+        });
+      }
+    } catch (e) {
+      print('Error al seleccionar archivo: $e');
+      if (mounted) {
+        await mostrarMensajeModal(context, "Error al seleccionar el archivo",
+            exito: false);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPickerActive = false;
+        });
+      }
+    }
+  }
+
+  /// Permite seleccionar un archivo `.csv` desde el sistema de archivos para cargar datos de base de datos de sigires.
+  Future<void> seleccionarArchivoSigires() async {
+    if (_isPickerActive) {
+      return;
+    }
+
+    setState(() {
+      _isPickerActive = true;
+    });
+
+    FilePickerResult? result;
+
+    try {
+      // Primero verificar la vigencia de la clave
+      final isValid = await _verificarVigenciaClave();
+      if (!isValid) {
+        return;
+      }
+
+      // Obtener el MD5 esperado
+      // final expectedMd5 = await getExpectedMd5Hash();
+      // if (expectedMd5 == null) {
+      //   return;
+      // }
+
+      result = await FilePicker.platform.pickFiles(type: FileType.any);
+
+      if (result != null && result.files.isNotEmpty) {
+        final filePath = result.files.single.path!;
+        final fileName = result.files.single.name;
+
+        if (!fileName.toLowerCase().endsWith('.csv')) {
+          if (mounted) {
+            await mostrarMensajeModal(
+                context, "El archivo debe tener extensión .csv",
+                exito: false);
+          }
+          return;
+        }
+
+        // // El nombre del archivo debe ser exactamente el MD5 más la extensión .csv
+        // final expectedFileName = '$expectedMd5.csv';
+
+        // // Validar que el nombre del archivo coincida con el MD5 esperado
+        // if (fileName.toLowerCase() != expectedFileName.toLowerCase()) {
+        //   if (mounted) {
+        //     await mostrarMensajeModal(context,
+        //         "El nombre del archivo no es válido para la fecha actual. Asegúrate de que el archivo sea el correcto.",
+        //         exito: false);
+        //   }
+        //   return;
+        // }
+
+        setState(() {
+          nombreArchivoDBSIGIRES = fileName;
+          rutaArchivoTemporalSIGIRES = filePath;
         });
       }
     } catch (e) {
@@ -274,8 +349,8 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
   /// - Define una fecha de expiración de 8 días desde el momento de carga.
   ///
   /// Retorna `true` si la operación fue exitosa, de lo contrario `false`.
-  Future<bool> guardarArchivoSeleccionado() async {
-    if (rutaArchivoTemporal == null || nombreArchivo == null) {
+  Future<bool> guardarArchivoSeleccionadoRocky() async {
+    if (rutaArchivoTemporalRocky == null || nombreArchivoDBRocky == null) {
       await mostrarMensajeModal(context, "Primero selecciona un archivo válido",
           exito: false);
       return false;
@@ -283,7 +358,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final savedCsvPath = '${appDir.path}/mi_base_pacientes.csv';
-      await File(rutaArchivoTemporal!).copy(savedCsvPath);
+      await File(rutaArchivoTemporalRocky!).copy(savedCsvPath);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ruta_csv_guardada', savedCsvPath);
@@ -301,6 +376,35 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       return false;
     }
   }
+
+    Future<bool> guardarArchivoSeleccionadoSIGIRES() async {
+    if (rutaArchivoTemporalSIGIRES == null || nombreArchivoDBSIGIRES == null) {
+      await mostrarMensajeModal(context, "Primero selecciona un archivo válido.",
+          exito: false);
+      return false;
+    }
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final savedCsvPath = '${appDir.path}/mi_base_pacientesSigires.csv';
+      await File(rutaArchivoTemporalSIGIRES!).copy(savedCsvPath);
+      print('Archivo SIGIRES guardado en: $savedCsvPath'); // Debug
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('ruta_csv_guardada_sigires', savedCsvPath);
+      // Establecer la fecha de expiración (8 días desde hoy)
+      final DateTime fechaExpiracion =
+          DateTime.now().add(const Duration(days: 8));
+      await prefs.setString(
+          'expiration_date', fechaExpiracion.toIso8601String());
+
+      return true;
+    } catch (e) {
+      debugPrint('Error al guardar el archivo: $e');
+      await mostrarMensajeModal(context, "Error al guardar el archivo",
+          exito: false);
+      return false;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -352,27 +456,13 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                           width: 80,
                           height: 80,
                         ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          "Cargar base de datos",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        // const Text(
-                        //   "Selecciona un archivo .csv con la información de los pacientes",
-                        //   textAlign: TextAlign.center,
-                        //   style: TextStyle(fontSize: 14, color: Colors.black54),
-                        // ),
-                        const SizedBox(height: 24),
+
+                        const SizedBox(height: 20),
                         const Row(
                           children: [
                             Expanded(
                               child: Text(
-                                "Archivo .csv de pacientes",
+                                "Cargar archivo de pacientes de Rocky",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -380,7 +470,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                         ),
                         const SizedBox(height: 8),
                         GestureDetector(
-                          onTap: seleccionarArchivo,
+                          onTap: seleccionarArchivoRocky,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 12),
@@ -396,7 +486,106 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    nombreArchivo ??
+                                    nombreArchivoDBRocky ??
+                                        "Ningún archivo seleccionado",
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        const TextStyle(color: Colors.black87),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF007BFF),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    try {
+                                      if (nombreArchivoDBRocky != null &&
+                                          rutaArchivoTemporalRocky != null) {
+                                        final ok =
+                                            await guardarArchivoSeleccionadoRocky();
+                                        if (ok) {
+                                          await mostrarMensajeModal(context,
+                                              "Archivo CSV cargado correctamente",
+                                              exito: true);
+                                          if (mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        }
+                                      } else {
+                                        await mostrarMensajeModal(context,
+                                            "Primero selecciona un archivo válido",
+                                            exito: false);
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      }
+                                    }
+                                  },
+                            child: isLoading
+                                ? const SizedBox(
+                                    // height: 18,
+                                    // width:18,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Cargar archivo CSV",
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Cargar archivo de pacientes de SIGIRES",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: seleccionarArchivoSigires,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(6),
+                              color: Colors.white,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.attach_file,
+                                    color: Colors.grey),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    nombreArchivoDBSIGIRES ??
                                         "Ningún archivo seleccionado",
                                     overflow: TextOverflow.ellipsis,
                                     style:
@@ -431,10 +620,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                       isLoading = true;
                                     });
                                     try {
-                                      if (nombreArchivo != null &&
-                                          rutaArchivoTemporal != null) {
+                                      if (nombreArchivoDBSIGIRES != null &&
+                                          rutaArchivoTemporalSIGIRES != null) {
                                         final ok =
-                                            await guardarArchivoSeleccionado();
+                                            await guardarArchivoSeleccionadoSIGIRES();
                                         if (ok) {
                                           await mostrarMensajeModal(context,
                                               "Archivo CSV cargado correctamente",
@@ -467,7 +656,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                   )
                                 : const Text(
                                     "Cargar archivo CSV",
-                                    style: TextStyle(fontSize: 16),
+                                    style: TextStyle(fontSize: 13),
                                   ),
                           ),
                         ),
