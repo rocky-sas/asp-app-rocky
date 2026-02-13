@@ -386,7 +386,7 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
                 const SizedBox(height: 16),
                 Text(
                   "Rocky • Versión 1.1 • Id: $deviceIdBackend",
-                  style: const TextStyle(color: Colors.black, fontSize: 12),
+                  style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold,),
                 ),
               ],
             ),

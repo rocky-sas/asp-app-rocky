@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:rocky_offline_sdk/screens/home/database_import_screen.dart';
 import 'package:rocky_offline_sdk/screens/patients/patient_search_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rocky_offline_sdk/common/custom_modal.dart';
 
 /// Pantalla principal de la aplicación que permite gestionar la base de datos de pacientes.
 ///
@@ -44,87 +45,6 @@ class _FormScreenState extends State<FormScreen> {
   /// y facilitar su acceso en diferentes partes de la aplicación.
   File? archivoSeleccionado;
 
-  /// Muestra un diálogo modal personalizado con mensaje, título e icono.
-  ///
-  /// Este método crea y presenta un diálogo modal con un diseño consistente que incluye:
-  /// - Un título destacado para indicar el tipo de mensaje
-  /// - Un icono que indica éxito o error según el parámetro [exito]
-  /// - Un mensaje detallado
-  /// - Un botón de aceptar para cerrar el diálogo
-  ///
-  /// Parámetros:
-  /// - [context]: El BuildContext para mostrar el diálogo
-  /// - [mensaje]: El texto detallado a mostrar en el diálogo
-  /// - [titulo]: El título principal del diálogo
-  /// - [exito]: Booleano que determina si se muestra un icono de éxito (true) o error (false)
-  ///
-  /// El diálogo utiliza una interfaz visual consistente con el diseño general de
-  /// la aplicación y se centra en la pantalla para llamar la atención del usuario.
-  Future<void> mostrarMensajeModal(
-    BuildContext context,
-    String mensaje,
-    String titulo,
-    bool exito,
-  ) {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: 280,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    exito ? Icons.check_circle_outline : Icons.error_outline,
-                    color: exito ? Colors.green : Colors.red,
-                    size: 40,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    titulo,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    mensaje,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BFF),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Aceptar'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   void initState() {
     super.initState();
@@ -139,15 +59,15 @@ class _FormScreenState extends State<FormScreen> {
   Future<void> _cargarRutaGuardada() async {
     final prefs = await SharedPreferences.getInstance();
     final rutaGuardada = prefs.getString(kRutaGuardadaKey);
-    print('[DEBUG] _cargarRutaGuardada: rutaGuardada = $rutaGuardada');
+    // print('[DEBUG] _cargarRutaGuardada: rutaGuardada = $rutaGuardada');
 
     if (rutaGuardada != null && rutaGuardada.isNotEmpty) {
       final archivo = File(rutaGuardada);
       final existe = await archivo.exists();
-      print('[DEBUG] _cargarRutaGuardada: archivo.exists = $existe');
+      // print('[DEBUG] _cargarRutaGuardada: archivo.exists = $existe');
       if (existe) {
-        print(
-            '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
+        // print(
+        //     '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
         await DatabaseService.loadCsvFile(archivo);
         setState(() {
           archivoSeleccionado = archivo;
@@ -160,6 +80,7 @@ class _FormScreenState extends State<FormScreen> {
       print('[DEBUG] _cargarRutaGuardada: No hay ruta guardada');
     }
   }
+
   //Cargar base de datos de sigires
   Future<void> _cargarRutaGuardadaSigires() async {
     final prefs = await SharedPreferences.getInstance();
@@ -204,50 +125,67 @@ class _FormScreenState extends State<FormScreen> {
   Future<void> _validarYIngresar() async {
     final prefs = await SharedPreferences.getInstance();
     final ruta = prefs.getString(kRutaGuardadaKey);
-    final rutaSigires = prefs.getString('ruta_csv_guardada_sigires');
+    final rutaSigires = prefs.getString(kRutaGuardadaKeySigires);
 
-    print("[DEBUG] _validarYIngresar: Ruta en SharedPreferences: $ruta");
+    print("[DEBUG] Ruta Rocky: $ruta");
+    print("[DEBUG] Ruta Sigires: $rutaSigires");
 
-    if (ruta == null || ruta.isEmpty) {
-      print(
-          "[DEBUG] _validarYIngresar: No hay ruta guardada en SharedPreferences.");
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text("Primero debes cargar una base de datos")),
-      // );
-      await mostrarMensajeModal(
-          context, "Primero debes cargar una base de datos,", "Error", false);
-      return;
-    }
+    final tieneRocky = ruta != null && ruta.isNotEmpty;
+    final tieneSigires = rutaSigires != null && rutaSigires.isNotEmpty;
 
-    final archivo = File(ruta);
-    final existe = await archivo.exists();
-    print("[DEBUG] _validarYIngresar: ¿El archivo existe?: $existe");
-
-    if (!existe) {
-      print("[DEBUG] _validarYIngresar: El archivo no existe en la ruta.");
-      await mostrarMensajeModal(
-          context, "El archivo de base de datos no existe.", "Error", false);
-      return;
-    }
-
-    print(
-        "[DEBUG] _validarYIngresar: Cargando base de datos desde: ${archivo.path}");
-    final cargaExitosa = await DatabaseService.loadCsvFile(archivo);
-
-    if (!cargaExitosa) {
-      print("[DEBUG] _validarYIngresar: Archivo CSV inválido o sin pacientes.");
+    if (!tieneRocky && !tieneSigires) {
       await mostrarMensajeModal(context,
-          "El archivo CSV no contiene pacientes válidos.", "Error", false);
+          mensaje: "Primero debes cargar una base de datos.",
+          titulo: "Error",
+          tipo: TipoMensaje.error);
       return;
     }
 
-    archivoSeleccionado = archivo;
+    File? archivoRocky;
+    File? archivoSigires;
 
-    print("[DEBUG] _validarYIngresar: Navegando a BuscarPacienteScreen");
+    bool rockyValido = false;
+    bool sigiresValido = false;
+
+    if (tieneRocky) {
+      archivoRocky = File(ruta!);
+      rockyValido = await archivoRocky.exists();
+      print("[DEBUG] Rocky existe: $rockyValido");
+    }
+
+    if (tieneSigires) {
+      archivoSigires = File(rutaSigires!);
+      sigiresValido = await archivoSigires.exists();
+      print("[DEBUG] Sigires existe: $sigiresValido");
+    }
+
+    if (!rockyValido && !sigiresValido) {
+      mostrarMensajeModal(
+          context,
+          mensaje: "Los archivos no existen en el dispositivo.",
+          titulo: "Error",
+          tipo: TipoMensaje.error);
+      return;
+    }
+
+    // 🔥 Cargar las que sí existan
+    if (rockyValido) {
+      await DatabaseService.loadCsvFile(archivoRocky!);
+    }
+
+    if (sigiresValido) {
+      await DatabaseService.loadCsvFile(archivoSigires!);
+    }
+
+    print("[DEBUG] Navegando a BuscarPacienteScreen");
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BuscarPacienteScreen(dbFile: archivo),
+        builder: (_) => BuscarPacienteScreen(
+          dbFileRocky: archivoRocky,
+          dbFileSigires: archivoSigires,
+        ),
       ),
     );
   }
@@ -384,26 +322,26 @@ class _FormScreenState extends State<FormScreen> {
                           if (status.isGranted || storageStatus.isGranted) {
                             final csvPath = await DatabaseService.exportCsv();
                             if (csvPath.isNotEmpty) {
-                              await mostrarMensajeModal(
+                              mostrarMensajeModal(
                                 context,
-                                'El archivo CSV ha sido guardado en la carpeta de Descargas:\n\n$csvPath',
-                                'CSV Exportado Exitosamente',
-                                true,
+                                mensaje:'El archivo CSV ha sido guardado en la carpeta de Descargas:\n\n$csvPath',
+                                titulo: 'CSV Exportado Exitosamente',
+                                tipo: TipoMensaje.exito,
                               );
                             } else {
-                              await mostrarMensajeModal(
+                              mostrarMensajeModal(
                                 context,
-                                'No se pudo exportar el archivo CSV. Intente nuevamente.',
-                                'Error al Exportar',
-                                false,
+                                mensaje: 'No se pudo exportar el archivo CSV. Intente nuevamente.',
+                                titulo: 'Error al Exportar',
+                                tipo: TipoMensaje.error,
                               );
                             }
                           } else {
-                            await mostrarMensajeModal(
+                            mostrarMensajeModal(
                               context,
-                              'Debes otorgar permisos de almacenamiento para exportar el archivo.',
-                              'Permiso denegado',
-                              false,
+                              mensaje: 'Debes otorgar permisos de almacenamiento para exportar el archivo.',
+                              titulo: 'Permiso denegado',
+                              tipo: TipoMensaje.error,
                             );
                           }
                         },
@@ -482,7 +420,11 @@ class _FormScreenState extends State<FormScreen> {
                 // ),
                 const Text(
                   "Rocky • Versión 1.1",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

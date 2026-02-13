@@ -380,7 +380,7 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
                 // ),
                 const Text(
                   "Rocky • Versión 1.1",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold,),
                 ),
               ],
             ),

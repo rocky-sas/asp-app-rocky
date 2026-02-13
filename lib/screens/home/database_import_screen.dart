@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:rocky_offline_sdk/common/custom_modal.dart';
 
 /// Pantalla que permite cargar una base de datos de pacientes en formato CSV.
 ///
@@ -47,9 +48,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
 
       if (codigoIPS == null) {
         if (mounted) {
-          await mostrarMensajeModal(
-              context, "Por favor registre primero el código IPS",
-              exito: false);
+          mostrarMensajeModal(context,
+              mensaje: "Por favor registre primero el código IPS",
+              titulo: "Advertencia",
+              tipo: TipoMensaje.info);
         }
         return null;
       }
@@ -80,63 +82,6 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     }
   }
 
-  /// Muestra un modal en pantalla con un mensaje de éxito o error.
-  ///
-  /// - [mensaje] Texto que se mostrará en el diálogo.
-  /// - [exito] Si es `true`, mostrará un icono verde de éxito;
-  ///   si es `false`, mostrará un icono rojo de error.
-  Future<void> mostrarMensajeModal(BuildContext context, String mensaje,
-      {bool exito = true}) {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: 280,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    exito ? Icons.check_circle_outline : Icons.error_outline,
-                    color: exito ? Colors.green : Colors.red,
-                    size: 40,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    mensaje,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BFF), // Azul
-                      foregroundColor: Colors.white, // Texto blanco
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cerrar'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   /// Verifica con el backend si la clave del dispositivo sigue vigente.
   ///
   /// Consulta el endpoint remoto con el `device_id` y la `key` almacenada en
@@ -150,9 +95,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
 
     if (deviceId == null || key == null) {
       if (mounted) {
-        await mostrarMensajeModal(
-            context, "Por favor, valide primero el dispositivo",
-            exito: false);
+        mostrarMensajeModal(context,
+            mensaje: "Por favor, valide primero el dispositivo",
+            titulo: "Error",
+            tipo: TipoMensaje.error);
       }
       return false;
     }
@@ -170,18 +116,21 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
         final isValid = data['is_valid']?.toString().toLowerCase() == "true";
         if (isValid) {
         } else if (mounted) {
-          await mostrarMensajeModal(context,
-              data['mensaje'] ?? 'La clave del dispositivo ha expirado',
-              exito: false);
+          mostrarMensajeModal(context,
+              mensaje:
+                  data['mensaje'] ?? 'La clave del dispositivo ha expirado',
+              titulo: "Clave expirada",
+              tipo: TipoMensaje.error);
         }
         return isValid;
       }
       return false;
     } catch (e) {
       if (mounted) {
-        await mostrarMensajeModal(
-            context, "Error al verificar la vigencia de la clave",
-            exito: false);
+        mostrarMensajeModal(context,
+            mensaje: "Error al verificar la vigencia de la clave",
+            titulo: 'Error',
+            tipo: TipoMensaje.error);
       }
       return false;
     }
@@ -228,9 +177,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
 
         if (!fileName.toLowerCase().endsWith('.csv')) {
           if (mounted) {
-            await mostrarMensajeModal(
-                context, "El archivo debe tener extensión .csv",
-                exito: false);
+            mostrarMensajeModal(context,
+                mensaje: "El archivo debe tener extensión .csv",
+                titulo: 'Error',
+                tipo: TipoMensaje.error);
           }
           return;
         }
@@ -241,9 +191,11 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
         // Validar que el nombre del archivo coincida con el MD5 esperado
         if (fileName.toLowerCase() != expectedFileName.toLowerCase()) {
           if (mounted) {
-            await mostrarMensajeModal(context,
-                "El nombre del archivo no es válido para la fecha actual. Asegúrate de que el archivo sea el correcto.",
-                exito: false);
+            mostrarMensajeModal(context,
+                mensaje:
+                    "El nombre del archivo no es válido para la fecha actual. Asegúrate de que el archivo sea el correcto.",
+                titulo: 'Error',
+                tipo: TipoMensaje.error);
           }
           return;
         }
@@ -256,8 +208,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     } catch (e) {
       print('Error al seleccionar archivo: $e');
       if (mounted) {
-        await mostrarMensajeModal(context, "Error al seleccionar el archivo",
-            exito: false);
+        mostrarMensajeModal(context,
+            mensaje: "Error al seleccionar el archivo",
+            titulo: 'Error',
+            tipo: TipoMensaje.error);
       }
     } finally {
       if (mounted) {
@@ -301,9 +255,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
 
         if (!fileName.toLowerCase().endsWith('.csv')) {
           if (mounted) {
-            await mostrarMensajeModal(
-                context, "El archivo debe tener extensión .csv",
-                exito: false);
+            mostrarMensajeModal(context,
+                mensaje: "El archivo debe tener extensión .csv",
+                titulo: 'Error',
+                tipo: TipoMensaje.error);
           }
           return;
         }
@@ -329,8 +284,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     } catch (e) {
       print('Error al seleccionar archivo: $e');
       if (mounted) {
-        await mostrarMensajeModal(context, "Error al seleccionar el archivo",
-            exito: false);
+        mostrarMensajeModal(context,
+            mensaje: "Error al seleccionar el archivo",
+            titulo: 'Error',
+            tipo: TipoMensaje.error);
       }
     } finally {
       if (mounted) {
@@ -351,8 +308,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
   /// Retorna `true` si la operación fue exitosa, de lo contrario `false`.
   Future<bool> guardarArchivoSeleccionadoRocky() async {
     if (rutaArchivoTemporalRocky == null || nombreArchivoDBRocky == null) {
-      await mostrarMensajeModal(context, "Primero selecciona un archivo válido",
-          exito: false);
+      mostrarMensajeModal(context,
+          mensaje: "Primero selecciona un archivo válido",
+          titulo: 'Error',
+          tipo: TipoMensaje.error);
       return false;
     }
     try {
@@ -371,25 +330,29 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       return true;
     } catch (e) {
       debugPrint('Error al guardar el archivo: $e');
-      await mostrarMensajeModal(context, "Error al guardar el archivo",
-          exito: false);
+      mostrarMensajeModal(context,
+          mensaje: "Error al guardar el archivo",
+          titulo: 'Error',
+          tipo: TipoMensaje.error);
       return false;
     }
   }
 
-    Future<bool> guardarArchivoSeleccionadoSIGIRES() async {
+  Future<bool> guardarArchivoSeleccionadoSIGIRES() async {
     if (rutaArchivoTemporalSIGIRES == null || nombreArchivoDBSIGIRES == null) {
-      await mostrarMensajeModal(context, "Primero selecciona un archivo válido.",
-          exito: false);
+      await mostrarMensajeModal(context,
+          mensaje: "Primero selecciona un archivo válido.",
+          titulo: 'Error',
+          tipo: TipoMensaje.error);
       return false;
     }
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final savedCsvPath = '${appDir.path}/mi_base_pacientesSigires.csv';
-      await File(rutaArchivoTemporalSIGIRES!).copy(savedCsvPath);
-      print('Archivo SIGIRES guardado en: $savedCsvPath'); // Debug
+      await File(rutaArchivoTemporalSIGIRES!).copy(savedCsvPath); // Debug
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ruta_csv_guardada_sigires', savedCsvPath);
+
       // Establecer la fecha de expiración (8 días desde hoy)
       final DateTime fechaExpiracion =
           DateTime.now().add(const Duration(days: 8));
@@ -399,12 +362,13 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       return true;
     } catch (e) {
       debugPrint('Error al guardar el archivo: $e');
-      await mostrarMensajeModal(context, "Error al guardar el archivo",
-          exito: false);
+      mostrarMensajeModal(context,
+          mensaje: "Error al guardar el archivo",
+          titulo: 'Error',
+          tipo: TipoMensaje.error);
       return false;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -521,17 +485,26 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                         final ok =
                                             await guardarArchivoSeleccionadoRocky();
                                         if (ok) {
-                                          await mostrarMensajeModal(context,
-                                              "Archivo CSV cargado correctamente",
-                                              exito: true);
+                                          if (!mounted) return;
+
+                                          await mostrarMensajeModal(
+                                            context,
+                                            mensaje:
+                                                "Archivo CSV cargado correctamente",
+                                            titulo: "Éxito",
+                                            tipo: TipoMensaje.exito,
+                                          );
+
                                           if (mounted) {
-                                            Navigator.pop(context);
+                                            Navigator.pop(context); // ahora sí
                                           }
                                         }
                                       } else {
-                                        await mostrarMensajeModal(context,
-                                            "Primero selecciona un archivo válido",
-                                            exito: false);
+                                        mostrarMensajeModal(context,
+                                            mensaje:
+                                                "Primero selecciona un archivo válido",
+                                            titulo: "Error",
+                                            tipo: TipoMensaje.error);
                                       }
                                     } finally {
                                       if (mounted) {
@@ -625,17 +598,26 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                         final ok =
                                             await guardarArchivoSeleccionadoSIGIRES();
                                         if (ok) {
-                                          await mostrarMensajeModal(context,
-                                              "Archivo CSV cargado correctamente",
-                                              exito: true);
+                                          if (!mounted) return;
+
+                                          await mostrarMensajeModal(
+                                            context,
+                                            mensaje:
+                                                "Archivo CSV cargado correctamente",
+                                            titulo: "Éxito",
+                                            tipo: TipoMensaje.exito,
+                                          );
+
                                           if (mounted) {
-                                            Navigator.pop(context);
+                                            Navigator.pop(context); // ahora sí
                                           }
                                         }
                                       } else {
-                                        await mostrarMensajeModal(context,
-                                            "Primero selecciona un archivo válido",
-                                            exito: false);
+                                        mostrarMensajeModal(context,
+                                            mensaje:
+                                                "Primero selecciona un archivo válido",
+                                            titulo: "Error",
+                                            tipo: TipoMensaje.error);
                                       }
                                     } finally {
                                       if (mounted) {

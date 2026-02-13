@@ -13,22 +13,28 @@ import 'package:rocky_offline_sdk/screens/patients/patient_details_screen.dart';
 import 'package:rocky_offline_sdk/services/auth_service.dart';
 import 'package:rocky_offline_sdk/services/expiration_service.dart';
 import '../../utils/csv_helper.dart';
+import 'package:rocky_offline_sdk/common/custom_modal.dart';
 
 /// Pantalla para buscar pacientes por número de identificación.
 ///
 /// Esta pantalla permite al usuario buscar pacientes específicos en la base de datos
-/// utilizando su número de identificación. Al encontrar un paciente, navega a 
+/// utilizando su número de identificación. Al encontrar un paciente, navega a
 /// la pantalla de detalles del paciente para mostrar su información completa.
 ///
 /// Requiere un archivo CSV [dbFile] que contiene la base de datos de pacientes.
 class BuscarPacienteScreen extends StatefulWidget {
   /// Archivo CSV que contiene la base de datos de pacientes.
-  final File dbFile;
+  final File? dbFileRocky;
+  final File? dbFileSigires;
 
   /// Crea una nueva instancia de la pantalla de búsqueda de pacientes.
   ///
   /// Requiere un [dbFile] que es el archivo CSV con la base de datos de pacientes.
-  const BuscarPacienteScreen({super.key, required this.dbFile});
+  const BuscarPacienteScreen({
+    super.key,
+    this.dbFileRocky,
+    this.dbFileSigires,
+  });
 
   @override
   State<BuscarPacienteScreen> createState() => _BuscarPacienteScreenState();
@@ -41,7 +47,7 @@ class BuscarPacienteScreen extends StatefulWidget {
 class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   /// Controlador para el campo de texto donde se ingresa el número de identificación.
   final TextEditingController _controller = TextEditingController();
-  
+
   /// Mensaje de error que se muestra cuando ocurre un problema durante la búsqueda.
   String? error;
 
@@ -60,7 +66,8 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   /// Utiliza [ExpirationService] para verificar el estado de la licencia.
   Future<void> _checkExpiration() async {
     try {
-      final expired = await ExpirationService.verificarYMostrarExpiracion(context);
+      final expired =
+          await ExpirationService.verificarYMostrarExpiracion(context);
       if (expired && mounted) {
         Navigator.pushReplacementNamed(context, '/form');
       }
@@ -82,7 +89,8 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   void buscarPaciente() async {
     try {
       // Verificar expiración antes de buscar
-      final expired = await ExpirationService.verificarYMostrarExpiracion(context);
+      final expired =
+          await ExpirationService.verificarYMostrarExpiracion(context);
       if (expired) {
         return;
       }
@@ -97,33 +105,54 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
       return;
     }
 
-    print('[BuscarPaciente] Buscando paciente con ID: $id');
+    // print('[BuscarPaciente] Buscando paciente con ID: $id');
 
     try {
-      final paciente = await CsvHelper.getPacienteById(id, widget.dbFile);
+      Map<String, dynamic>? pacienteRocky;
+      Map<String, dynamic>? pacienteSigires;
 
-      if (paciente != null) {
-        print('[BuscarPaciente] Paciente encontrado: ${paciente['nombres']}');
-        setState(() {
-          error = null;
-        });
+      if (widget.dbFileRocky != null) {
+        pacienteRocky =
+            await CsvHelper.getPacienteById(id, widget.dbFileRocky!);
+      }
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetallePacienteScreen(paciente: paciente),
-          ),
-        );
-        _controller.clear(); 
-      } else {
-        print('[BuscarPaciente] Paciente no encontrado');
+      if (widget.dbFileSigires != null) {
+        pacienteSigires =
+            await CsvHelper.getPacienteById(id, widget.dbFileSigires!);
+      }
+
+      if (pacienteRocky == null && pacienteSigires == null) {
+        // print('[BuscarPaciente] No encontrado en ninguna base');
         setState(() {
           error = "Paciente no encontrado";
         });
+        mostrarMensajeModal(
+          context,
+          mensaje: "Paciente no encontrado en las bases de datos cargadas.",
+          titulo: "Error",
+          tipo: TipoMensaje.error,
+        );
+        return;
       }
+
+      setState(() {
+        error = null;
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetallePacienteScreen(
+            pacienteRocky: pacienteRocky,
+            pacienteSIGIRES: pacienteSigires,
+          ),
+        ),
+      );
+
+      _controller.clear();
     } catch (e, stack) {
-      print('[BuscarPaciente][ERROR] $e');
-      print('[BuscarPaciente][STACK] $stack');
+      // print('[BuscarPaciente][ERROR] $e');
+      // print('[BuscarPaciente][STACK] $stack');
       setState(() {
         error = "Error al acceder a la base de datos";
       });
@@ -273,6 +302,15 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                     ),
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Rocky • Versión 1.1",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

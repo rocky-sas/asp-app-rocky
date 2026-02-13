@@ -6,9 +6,13 @@ import 'package:app_settings/app_settings.dart';
 import 'package:rocky_offline_sdk/services/auth_service.dart';
 import 'package:rocky_offline_sdk/services/database_service.dart';
 import 'package:rocky_offline_sdk/utils/bluetooth_printer_helper.dart';
+import 'package:rocky_offline_sdk/utils/helpers/safedata.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'patient_view/rocky_view.dart';
+import 'patient_view/sigires_view.dart';
+import 'package:rocky_offline_sdk/utils/helpers/colors_helper.dart';
 
 /// Pantalla de detalle de paciente con capacidades de impresión Bluetooth.
 ///
@@ -32,9 +36,11 @@ import 'package:intl/intl.dart';
 /// * Manejo de errores y reconexión con dispositivos Bluetooth
 /// * Retroalimentación visual clara sobre el estado de la conexión
 class DetallePacienteScreen extends StatefulWidget {
-  final Map<String, dynamic> paciente;
+  final Map<String, dynamic>? pacienteRocky;
+  final Map<String, dynamic>? pacienteSIGIRES;
 
-  const DetallePacienteScreen({Key? key, required this.paciente})
+  const DetallePacienteScreen(
+      {Key? key, required this.pacienteRocky, required this.pacienteSIGIRES})
       : super(key: key);
 
   @override
@@ -544,9 +550,9 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
       }
     }
 
-    final p = widget.paciente;
+    final p = widget.pacienteRocky;
     // Formatea el sexo del paciente para la impresión (F o M)
-    final sexoFormateado = (p['Sexo']?.toLowerCase() == 'f') ? 'F' : 'M';
+    final sexoFormateado = (p?['Sexo']?.toLowerCase() == 'f') ? 'F' : 'M';
 
     final printerHelper = BluetoothPrinterHelper(
       context: context,
@@ -556,40 +562,40 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
     await printerHelper.imprimirConSeguridadCustom((bluetooth) async {
       // Marcar el status como true en el CSV
       await DatabaseService.updatePatientStatus(
-          widget.paciente['NumeroId'], true);
+          widget.pacienteRocky?['NumeroId'], true);
 
       bluetooth.printNewLine();
-      bluetooth.printCustom("${p['name_ips'] ?? 'Desconocido'}", 1, 1);
+      bluetooth.printCustom("${p?['name_ips'] ?? 'Desconocido'}", 1, 1);
       bluetooth.printCustom(
-        "${p['name_municipality'] ?? 'N/A'} - ${p['name_department'] ?? 'N/A'}",
+        "${p?['name_municipality'] ?? 'N/A'} - ${p?['name_department'] ?? 'N/A'}",
         1,
         1,
       );
       bluetooth.printNewLine();
       bluetooth.printCustom("ACTIVIDADES PENDIENTES RES.3280", 1, 1);
       bluetooth.printNewLine();
-      bluetooth.printCustom("${p['Nombres']}", 1, 0);
+      bluetooth.printCustom("${p?['Nombres']}", 1, 0);
       bluetooth.printCustom(
-        "${p['TipoIdentificacion']}: ${p['NumeroId']}  NTO: ${p['FechaNto']}",
+        "${p?['TipoIdentificacion']}: ${p?['NumeroId']}  NTO: ${p?['FechaNto']}",
         1,
         0,
       );
       bluetooth.printCustom(
-        "SEXO: $sexoFormateado    C.VIDA: ${p['CursoVida'] ?? 'Ninguna'}",
+        "SEXO: $sexoFormateado    C.VIDA: ${p?['CursoVida'] ?? 'Ninguna'}",
         1,
         0,
       );
-      bluetooth.printCustom(normalizeText("EDAD: ${p['EdadAnos']}"), 1, 0);
+      bluetooth.printCustom(normalizeText("EDAD: ${p?['EdadAnos']}"), 1, 0);
       bluetooth.printNewLine();
       bluetooth.printCustom(
           normalizeText(
-              "ACTIVIDADES: ${p['ActividadesPendientes'] ?? 'Ninguna'}"),
+              "ACTIVIDADES: ${p?['ActividadesPendientes'] ?? 'Ninguna'}"),
           1,
           0);
       bluetooth.printNewLine();
       bluetooth.printCustom(
           normalizeText(
-              "LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}"),
+              "LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}"),
           1,
           0);
 
@@ -637,30 +643,30 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
   }
 
   String getFormattedText() {
-    final p = widget.paciente;
-    final sexoFormateado = (p['Sexo']?.toLowerCase() == 'f') ? 'F' : 'M';
+    final p = widget.pacienteRocky;
+    final sexoFormateado = (p?['Sexo']?.toLowerCase() == 'f') ? 'F' : 'M';
 
     return """
-${p['name_ips'] ?? 'Desconocido'}
-${p['name_municipality'] ?? 'N/A'} - ${p['name_department'] ?? 'N/A'}
+${p?['name_ips'] ?? 'Desconocido'}
+${p?['name_municipality'] ?? 'N/A'} - ${p?['name_department'] ?? 'N/A'}
 
 EVALUACION DE ACTIVIDADES PENDIENTES RES.3280
 
-${p['TipoIdentificacion']}: ${p['NumeroId']}
-${p['Nombres']}
-TELEFONO: ${p['Telefono']}    SEXO: $sexoFormateado
-EDAD: ${p['EdadAnos']}    NTO: ${p['FechaNto']}
+${p?['TipoIdentificacion']}: ${p?['NumeroId']}
+${p?['Nombres']}
+TELEFONO: ${p?['Telefono']}    SEXO: $sexoFormateado
+EDAD: ${p?['EdadAnos']}    NTO: ${p?['FechaNto']}
 
-CURSO DE VIDA: ${p['CursoVida'] ?? 'Ninguna'}
+CURSO DE VIDA: ${p?['CursoVida'] ?? 'Ninguna'}
 
-ACTIVIDADES: ${p['ActividadesPendientes'] ?? 'Ninguna'}
+ACTIVIDADES: ${p?['ActividadesPendientes'] ?? 'Ninguna'}
 
-LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
+LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
 """;
   }
 
   Future<void> _sendWhatsAppMessage() async {
-    final phoneNumber = widget.paciente['Telefono']?.toString() ?? '';
+    final phoneNumber = widget.pacienteRocky?['Telefono']?.toString() ?? '';
     if (phoneNumber.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -678,7 +684,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
         await launchUrl(Uri.parse(url));
         // Marcar el status como true en el CSV después de abrir WhatsApp
         await DatabaseService.updatePatientStatus(
-            widget.paciente['NumeroId'], true);
+            widget.pacienteRocky?['NumeroId'], true);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -732,45 +738,21 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
     );
   }
 
+  String baseActiva = "rocky";
+  Map<String, dynamic>? get pacienteActivo {
+    if (baseActiva == "rocky") return widget.pacienteRocky;
+    if (baseActiva == "sigires") return widget.pacienteSIGIRES;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final p = widget.paciente;
+    final p = pacienteActivo;
+    final pr = widget.pacienteRocky;
     // No se usa actualmente, pero se podría utilizar en la UI para mostrar el sexo del paciente
-    // final sexoFormateado = (p['Sexo']?.toLowerCase() == 'f') ? 'Femenino' : 'Masculino';
-
-    DateTime? parseFecha(dynamic valor) {
-      if (valor == null) return null;
-
-      final fechaStr = valor.toString().trim();
-      if (fechaStr.isEmpty) return null;
-
-      try {
-        if (fechaStr.contains('/')) {
-          return DateFormat('dd/MM/yyyy').parse(fechaStr);
-        }
-        if (fechaStr.contains('-')) {
-          return DateFormat('dd-MM-yyyy').parse(fechaStr);
-        }
-      } catch (_) {
-        return null;
-      }
-
-      return null;
-    }
-
-    final fechaCitologia = parseFecha(p['Citologia']);
-    final fechaConCursoVida = parseFecha(p['ConCursoVida']);
-    final fechaSanOcuMatFe = parseFecha(p['SanOcuMatFe']);
-    final fechaHemoHemaJov = parseFecha(p['SanOcuMatFe']);
-    final fechaDetartaje = parseFecha(p['Detartaje']);
-    final fechaConPlaca = parseFecha(p['ConPlaca']);
-    final fechaFluor = parseFecha(p['Fluor']);
-    final fechaPaqLabs = parseFecha(p['PaqLabs']);
-    final fechaSellantes = parseFecha(p['Sellantes']);
-    final fechaConsOdont = parseFecha(p['ConsOdont']);
-    final fechaPlanFami = parseFecha(p['PlanFami']);
-
-
+    // final sexoFormateado = (p?['Sexo']?.toLowerCase() == 'f') ? 'Femenino' : 'Masculino';
+    // o null si quieres validar primero
+    final sexo = pr?['Sexo']?.toString().toLowerCase().trim();
 
     return Scaffold(
       backgroundColor: const Color(0xFF007BFF),
@@ -840,13 +822,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                           children: [
                             Flexible(
                               child: Text(
-                                (p['Nombres'] != null &&
-                                        p['Nombres']
-                                            .toString()
-                                            .trim()
-                                            .isNotEmpty)
-                                    ? p['Nombres'].toString()
-                                    : "N/A",
+                                valorSeguro(pr, 'Nombres'),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 22,
@@ -857,7 +833,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             // Primera columna
@@ -870,21 +846,14 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                     TextSpan(
                                       children: [
                                         TextSpan(
-                                          text: (p['TipoIdentificacion'] !=
-                                                      null &&
-                                                  p['TipoIdentificacion']
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? p['TipoIdentificacion']
-                                                  .toString()
-                                              : "N/A",
+                                          text: valorSeguro(
+                                              pr, 'TipoIdentificacion'),
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
                                           text:
-                                              " ${(p['NumeroId'] != null && p['NumeroId'].toString().trim().isNotEmpty) ? p['NumeroId'].toString() : "N/A"}",
+                                              " ${valorSeguro(p, 'NumeroId')}",
                                         ),
                                       ],
                                     ),
@@ -900,13 +869,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
-                                          text: (p['EdadAnos'] != null &&
-                                                  p['EdadAnos']
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? p['EdadAnos'].toString()
-                                              : "N/A",
+                                          text: valorSeguro(pr, 'EdadAnos'),
                                         ),
                                       ],
                                     ),
@@ -923,10 +886,9 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
-                                          text:
-                                              (p['Sexo']?.toLowerCase() == 'f')
-                                                  ? 'F'
-                                                  : 'M',
+                                          text: (sexo == null || sexo.isEmpty)
+                                              ? 'N/A'
+                                              : (sexo == 'f' ? 'F' : 'M'),
                                         ),
                                       ],
                                     ),
@@ -949,13 +911,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
-                                          text: (p['FechaNto'] != null &&
-                                                  p['FechaNto']
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? p['FechaNto'].toString()
-                                              : "N/A",
+                                          text: valorSeguro(pr, 'FechaNto'),
                                         ),
                                       ],
                                     ),
@@ -971,13 +927,7 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
-                                          text: (p['CursoVida'] != null &&
-                                                  p['CursoVida']
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? p['CursoVida'].toString()
-                                              : "N/A",
+                                          text: valorSeguro(pr, 'CursoVida'),
                                         ),
                                       ],
                                     ),
@@ -994,13 +944,23 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                                               fontWeight: FontWeight.bold),
                                         ),
                                         TextSpan(
-                                          text: (p['Telefono'] != null &&
-                                                  p['Telefono']
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? p['Telefono'].toString()
-                                              : "N/A",
+                                          text: valorSeguro(pr, 'Telefono'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // Teléfono
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        const TextSpan(
+                                          text: "EPS: ",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        TextSpan(
+                                          text: valorSeguro(pr, 'EPS'),
                                         ),
                                       ],
                                     ),
@@ -1010,116 +970,107 @@ LABORATORIOS: ${p['LaboratoriosPendientes'] ?? 'Ninguna'}
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        buildCard(
-                          icon: Icons.task_alt,
-                          title: "Actividades pendientes",
-                          content: (p['ActividadesPendientes'] != null &&
-                                  p['ActividadesPendientes']
-                                      .toString()
-                                      .trim()
-                                      .isNotEmpty)
-                              ? p['ActividadesPendientes'].toString()
-                              : 'N/A',
-                        ),
-                        buildCard(
-                          icon: Icons.biotech,
-                          title: "Laboratorios pendientes",
-                          content: (p['LaboratoriosPendientes'] != null &&
-                                  p['LaboratoriosPendientes']
-                                      .toString()
-                                      .trim()
-                                      .isNotEmpty)
-                              ? p['LaboratoriosPendientes'].toString()
-                              : 'N/A',
-                        ),
-                        Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Theme(
-                            data: Theme.of(context).copyWith(
-                              dividerColor:
-                                  Colors.transparent, 
-                            ),
-                            
-                            child: ExpansionTile(
-                                tilePadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                              leading: Icon(Icons.checklist, color: Colors.blue, size: 32,),
-                              title: const Text(
-                                "Actividades realizadas",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  
-                                ),
-                                
+                        const SizedBox(height: 10),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(40),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                              
-                              childrenPadding: const EdgeInsets.all(16),
-                              
-                              children: [
-                                itemExamen(
-                                  nombre: "Citología",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaCitologia,
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // ROCKY
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      baseActiva = "rocky";
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: baseActiva == "rocky"
+                                          ? ColorHelper.fromHex("#dcc05d")
+                                              .withOpacity(0.4)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(40),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Rocky",
+                                        style: TextStyle(
+                                          color: baseActiva == "rocky"
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                itemExamen(
-                                  nombre: "Curso de vida",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaConCursoVida,
+                              ),
+
+                              // SIGIRES
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      baseActiva = "sigires";
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: baseActiva == "sigires"
+                                          ? ColorHelper.fromHex("#003366")
+                                              .withOpacity(0.9)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(40),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Sigires",
+                                        style: TextStyle(
+                                          color: baseActiva == "sigires"
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                itemExamen(
-                                  nombre: "S. O. Mat. Fe",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaSanOcuMatFe,
-                                ),
-                                itemExamen(
-                                  nombre: "Hemograma y hematocrito en jóvenes",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaHemoHemaJov,
-                                ),
-                                itemExamen(
-                                  nombre: "Detartaje",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaDetartaje,
-                                ),
-                                itemExamen(
-                                  nombre: "Control de placa",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaConPlaca,
-                                ),
-                                itemExamen(
-                                  nombre: "Fluor",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaFluor,
-                                ),
-                                itemExamen(
-                                  nombre: "Paquete de laboratorios",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaPaqLabs,
-                                ),
-                                itemExamen(
-                                  nombre: "Sellantes",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaSellantes,
-                                ),
-                                itemExamen(
-                                  nombre: "Consulta odontológica",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaConsOdont,
-                                ),
-                                itemExamen(
-                                  nombre: "Plan familiar",
-                                  icon: Icons.check_circle_outline,
-                                  fecha: fechaPlanFami,
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: baseActiva == "rocky"
+                                ? ColorHelper.fromHex("#dcc05d")
+                                    .withOpacity(0.2)
+                                : ColorHelper.fromHex("#003366")
+                                    .withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: baseActiva == "rocky"
+                              ? RockyView(paciente: widget.pacienteRocky)
+                              : SigiresView(paciente: widget.pacienteSIGIRES),
+                        ),
+                        const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
