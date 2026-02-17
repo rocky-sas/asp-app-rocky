@@ -49,6 +49,7 @@ class _FormScreenState extends State<FormScreen> {
   void initState() {
     super.initState();
     _cargarRutaGuardada();
+    _cargarRutaGuardadaSigires();
   }
 
   /// Intenta cargar la última base de datos utilizada desde SharedPreferences.
@@ -167,7 +168,6 @@ class _FormScreenState extends State<FormScreen> {
       return;
     }
 
-    // 🔥 Cargar las que sí existan
     if (rockyValido) {
       await DatabaseService.loadCsvFile(archivoRocky!);
     }
@@ -368,7 +368,7 @@ class _FormScreenState extends State<FormScreen> {
                       ElevatedButton.icon(
                         onPressed: _validarYIngresar,
                         icon: const Icon(Icons.login),
-                        label: const Text("Ingresar"),
+                        label: const Text("Buscar paciente"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.blue,

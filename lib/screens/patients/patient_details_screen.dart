@@ -754,6 +754,9 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
     // o null si quieres validar primero
     final sexo = pr?['Sexo']?.toString().toLowerCase().trim();
 
+    bool tieneRocky = widget.pacienteRocky != null;
+    bool tieneSigires = widget.pacienteSIGIRES != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFF007BFF),
       body: SafeArea(
@@ -818,14 +821,18 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                         ),
                         const SizedBox(height: 8),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Flexible(
                               child: Text(
                                 valorSeguro(pr, 'Nombres'),
                                 textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
                                 style: const TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
                                 ),
@@ -922,7 +929,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                     TextSpan(
                                       children: [
                                         const TextSpan(
-                                          text: "C.Vida: ",
+                                          text: "Curso Vida: ",
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
@@ -951,28 +958,31 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                   ),
                                   const SizedBox(height: 4),
                                   // Teléfono
-                                  Text.rich(
-                                    TextSpan(
-                                      children: [
-                                        const TextSpan(
-                                          text: "EPS: ",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        TextSpan(
-                                          text: valorSeguro(pr, 'EPS'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 4),
+                        Center(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: "EPS: ",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(
+                                  text: valorSeguro(pr, 'EPS'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 16),
+                          height: 52,
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade300,
@@ -1006,14 +1016,31 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                       borderRadius: BorderRadius.circular(40),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        "Rocky",
-                                        style: TextStyle(
-                                          color: baseActiva == "rocky"
-                                              ? Colors.white
-                                              : Colors.black87,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Rocky",
+                                            style: TextStyle(
+                                              color: baseActiva == "rocky"
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: tieneRocky
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -1039,14 +1066,31 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                       borderRadius: BorderRadius.circular(40),
                                     ),
                                     child: Center(
-                                      child: Text(
-                                        "Sigires",
-                                        style: TextStyle(
-                                          color: baseActiva == "sigires"
-                                              ? Colors.white
-                                              : Colors.black87,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Sigires",
+                                            style: TextStyle(
+                                              color: baseActiva == "sigires"
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: tieneSigires
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -1055,7 +1099,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                             ],
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -1071,158 +1115,166 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                               : SigiresView(paciente: widget.pacienteSIGIRES),
                         ),
                         const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _isPrinting
-                                ? null
-                                : () async {
-                                    setState(() {
-                                      _isPrinting = true;
-                                    });
-
-                                    // Forzar a Flutter a renderizar el spinner antes de imprimir
-                                    await Future.delayed(
-                                        const Duration(milliseconds: 1000));
-
-                                    try {
-                                      await _printPaciente(); // IMPORTANTE: que sea async y espere todo
-                                    } catch (_) {
-                                      if (mounted) {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return AlertDialog(
-                                              title: const Text(
-                                                  "Impresora no encontrada"),
-                                              content: const Text(
-                                                  "Conéctate a una impresora antes de imprimir."),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.of(context)
-                                                          .pop(),
-                                                  child: const Text("Cerrar"),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      }
-                                    }
-
-                                    if (mounted) {
+                        if (baseActiva == "rocky")
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isPrinting
+                                  ? null
+                                  : () async {
                                       setState(() {
-                                        _isPrinting = false;
+                                        _isPrinting = true;
                                       });
-                                    }
-                                  },
-                            icon: _isPrinting
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2, color: Colors.white),
-                                  )
-                                : const Icon(Icons.print),
-                            label: Text(_isPrinting
-                                ? 'Imprimiendo...'
-                                : 'Imprimir información'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF007BFF),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+
+                                      // Forzar a Flutter a renderizar el spinner antes de imprimir
+                                      await Future.delayed(
+                                          const Duration(milliseconds: 1000));
+
+                                      try {
+                                        await _printPaciente(); // IMPORTANTE: que sea async y espere todo
+                                      } catch (_) {
+                                        if (mounted) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    "Impresora no encontrada"),
+                                                content: const Text(
+                                                    "Conéctate a una impresora antes de imprimir."),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.of(context)
+                                                            .pop(),
+                                                    child: const Text("Cerrar"),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        }
+                                      }
+
+                                      if (mounted) {
+                                        setState(() {
+                                          _isPrinting = false;
+                                        });
+                                      }
+                                    },
+                              icon: _isPrinting
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Icon(Icons.print),
+                              label: Text(_isPrinting
+                                  ? 'Imprimiendo...'
+                                  : 'Imprimir información'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF007BFF),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _isPrinting
-                                ? null
-                                : () async {
-                                    // Verificar estado actual antes de intentar reconectar
-                                    final isConnected =
-                                        await bluetooth.isConnected ?? false;
-                                    if (isConnected && mounted) {
-                                      setState(() {
-                                        _bluetoothConectado = true;
-                                        _conexionFallida = false;
-                                      });
-                                      return;
-                                    }
-
-                                    // Solo permitir reconexión si no hay conexión activa
-                                    if (!_bluetoothConectado) {
-                                      if (mounted) {
+                        const SizedBox(height: 10),
+                        if (baseActiva == "rocky")
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isPrinting
+                                  ? null
+                                  : () async {
+                                      // Verificar estado actual antes de intentar reconectar
+                                      final isConnected =
+                                          await bluetooth.isConnected ?? false;
+                                      if (isConnected && mounted) {
                                         setState(() {
+                                          _bluetoothConectado = true;
                                           _conexionFallida = false;
                                         });
+                                        return;
                                       }
-                                      await _initBluetooth(
-                                          mostrarDialogo: true);
 
-                                      // Verificar el estado final de la conexión
-                                      if (mounted) {
-                                        final finalConnectionState =
-                                            await bluetooth.isConnected ??
-                                                false;
-                                        setState(() {
-                                          _bluetoothConectado =
-                                              finalConnectionState;
-                                          _conexionFallida =
-                                              !finalConnectionState;
-                                        });
+                                      // Solo permitir reconexión si no hay conexión activa
+                                      if (!_bluetoothConectado) {
+                                        if (mounted) {
+                                          setState(() {
+                                            _conexionFallida = false;
+                                          });
+                                        }
+                                        await _initBluetooth(
+                                            mostrarDialogo: true);
+
+                                        // Verificar el estado final de la conexión
+                                        if (mounted) {
+                                          final finalConnectionState =
+                                              await bluetooth.isConnected ??
+                                                  false;
+                                          setState(() {
+                                            _bluetoothConectado =
+                                                finalConnectionState;
+                                            _conexionFallida =
+                                                !finalConnectionState;
+                                          });
+                                        }
                                       }
-                                    }
-                                  },
-                            icon: _isPrinting
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white),
-                                    ),
-                                  )
-                                : const Icon(Icons.refresh),
-                            label: Text(_isPrinting
-                                ? "Procesando..."
-                                : "Reintentar conexión bluetooth"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _bluetoothConectado
-                                  ? Colors.grey
-                                  : Colors.orange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                    },
+                              icon: _isPrinting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(Icons.refresh),
+                              label: Text(_isPrinting
+                                  ? "Procesando..."
+                                  : "Reintentar conexión bluetooth"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _bluetoothConectado
+                                    ? Colors.grey
+                                    : Colors.orange,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _sendWhatsAppMessage,
-                            icon: const Icon(Icons.share, color: Colors.white),
-                            label: const Text("Enviar Información"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 10),
+                        if (baseActiva == "rocky")
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _sendWhatsAppMessage,
+                              icon:
+                                  const Icon(Icons.share, color: Colors.white),
+                              label: const Text("Enviar Información"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),

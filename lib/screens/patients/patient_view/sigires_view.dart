@@ -15,23 +15,45 @@ class SigiresView extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = paciente;
 
-    if (p == null) {
-      return const Center(child: Text("Sin información"));
-    }
+if (p == null) {
+  return Center(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.info_outline, color: Colors.grey),
+          SizedBox(width: 8),
+          Text(
+            "Sin información",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
+          SizedBox(height: 200),
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+
+
 
     final sexo = p['SEXO']?.toString().toUpperCase().trim();
-
-    print("🔎 Keys recibidas:");
-    print(p.keys);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
-
-          /// 👤 NOMBRES
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -39,13 +61,13 @@ class SigiresView extends StatelessWidget {
                   child: Text(valorSeguro(p, 'PRIMER_NOMBRE'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold))),
+                          fontSize: 18, fontWeight: FontWeight.bold))),
               const SizedBox(width: 10),
               Flexible(
                   child: Text(valorSeguro(p, 'SEGUNDO_NOMBRE'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold))),
+                          fontSize: 18, fontWeight: FontWeight.bold))),
             ],
           ),
           Row(
@@ -55,18 +77,16 @@ class SigiresView extends StatelessWidget {
                   child: Text(valorSeguro(p, 'PRIMER_APELLIDO'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold))),
+                          fontSize: 18, fontWeight: FontWeight.bold))),
               const SizedBox(width: 10),
               Flexible(
                   child: Text(valorSeguro(p, 'SEGUNDO_APELLIDO'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold))),
+                          fontSize: 18, fontWeight: FontWeight.bold))),
             ],
           ),
-
           const SizedBox(height: 16),
-
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -79,7 +99,7 @@ class SigiresView extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: valorSeguro(p, 'TIPO_ID'),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(),
                           ),
                           TextSpan(text: " ${valorSeguro(p, 'NUMERO_ID')}"),
                         ],
@@ -105,45 +125,38 @@ class SigiresView extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text("Tel: ${valorSeguro(p, 'TELEFONO')}"),
                     const SizedBox(height: 4),
-                    Text("EPS: ${valorSeguro(p, 'REGIMEN')}"),
+                    Text("R: ${valorSeguro(p, 'REGIMEN')}"),
                   ],
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           buildCard(
             icon: Icons.badge,
             title: "Control de placa bacteriana",
             content: valorSeguro(p, 'CONTROL_PLACA'),
           ),
-
           buildCard(
             icon: Icons.phone,
             title: "Control recién nacidos",
             content: valorSeguro(p, 'CONTROL_RN'),
           ),
-
           buildCard(
             icon: Icons.task_alt,
             title: "Consulta crecimiento y desarrollo",
             content: valorSeguro(p, 'CRECIMIENTO_DESARROLLO'),
           ),
-
           buildCard(
             icon: Icons.biotech,
             title: "Consulta joven primera vez",
             content: valorSeguro(p, 'CONSULTA_JOVEN'),
           ),
-
           buildCard(
             icon: Icons.biotech,
             title: "Consulta adulto primera vez",
             content: valorSeguro(p, 'CONSULTA_ADULTO'),
           ),
-
           const SizedBox(height: 20),
         ],
       ),

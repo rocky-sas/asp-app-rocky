@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:rocky_offline_sdk/common/custom_modal.dart';
+import 'package:intl/intl.dart';
 
 /// Pantalla que permite cargar una base de datos de pacientes en formato CSV.
 ///
@@ -321,15 +322,18 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ruta_csv_guardada', savedCsvPath);
-      // Establecer la fecha de expiración (8 días desde hoy)
+      // Establecer la fecha de expiración (16 días desde hoy)
       final DateTime fechaExpiracion =
-          DateTime.now().add(const Duration(days: 8));
+          DateTime.now().add(const Duration(days: 16));
       await prefs.setString(
           'expiration_date', fechaExpiracion.toIso8601String());
+      String fechaFormateada = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      await prefs.setString('dateSaveDBRocky', fechaFormateada);
 
       return true;
     } catch (e) {
       debugPrint('Error al guardar el archivo: $e');
+      if (!mounted) return false;
       mostrarMensajeModal(context,
           mensaje: "Error al guardar el archivo",
           titulo: 'Error',
@@ -353,15 +357,19 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ruta_csv_guardada_sigires', savedCsvPath);
 
-      // Establecer la fecha de expiración (8 días desde hoy)
+      // Establecer la fecha de expiración (30 días desde hoy)
       final DateTime fechaExpiracion =
-          DateTime.now().add(const Duration(days: 8));
+          DateTime.now().add(const Duration(days: 30));
       await prefs.setString(
           'expiration_date_sigires', fechaExpiracion.toIso8601String());
+
+      String fechaFormateada = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      await prefs.setString('dateSaveDBSigires', fechaFormateada);
 
       return true;
     } catch (e) {
       debugPrint('Error al guardar el archivo: $e');
+      if (!mounted) return false;
       mostrarMensajeModal(context,
           mensaje: "Error al guardar el archivo",
           titulo: 'Error',

@@ -14,6 +14,8 @@ import 'package:rocky_offline_sdk/services/auth_service.dart';
 import 'package:rocky_offline_sdk/services/expiration_service.dart';
 import '../../utils/csv_helper.dart';
 import 'package:rocky_offline_sdk/common/custom_modal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 /// Pantalla para buscar pacientes por número de identificación.
 ///
@@ -55,6 +57,7 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   void initState() {
     super.initState();
     _checkExpiration();
+    cargarDatos();
   }
 
   /// Verifica si la licencia de la aplicación ha expirado.
@@ -65,14 +68,19 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   ///
   /// Utiliza [ExpirationService] para verificar el estado de la licencia.
   Future<void> _checkExpiration() async {
-    try {
-      final expired =
-          await ExpirationService.verificarYMostrarExpiracion(context);
-      if (expired && mounted) {
-        Navigator.pushReplacementNamed(context, '/form');
-      }
-    } catch (e) {
-      debugPrint('Error checking expiration: $e');
+    final expired =
+        await ExpirationService.verificarYMostrarExpiracion(context);
+
+    if (!mounted) return;
+
+    if (expired == true) {
+      Navigator.pushReplacementNamed(context, '/form');
+      mostrarMensajeModal(
+        context,
+        mensaje: "Las bases de datos de Rocky y Sigires han expirado.",
+        titulo: "Base de datos expirada",
+        tipo: TipoMensaje.error,
+      );
     }
   }
 
@@ -88,9 +96,11 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   /// La búsqueda se realiza utilizando [CsvHelper] para consultar el archivo CSV.
   void buscarPaciente() async {
     try {
-      // Verificar expiración antes de buscar
       final expired =
           await ExpirationService.verificarYMostrarExpiracion(context);
+
+      if (!mounted) return; // 🔥 IMPORTANTE
+
       if (expired) {
         return;
       }
@@ -171,6 +181,25 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
   ///
   /// La UI está diseñada con un estilo consistente con el resto de la aplicación,
   /// utilizando el color azul principal (#007BFF) como tema.
+  String? dateSaveDBSigires;
+  String? dateSaveDBRocky;
+  Future<void> cargarDatos() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      dateSaveDBSigires = prefs.getString("dateSaveDBSigires");
+      dateSaveDBRocky = prefs.getString("dateSaveDBRocky");
+    });
+  }
+
+  String calcularDias(String fecha) {
+    DateTime fechaBD = DateFormat('dd/MM/yyyy').parse(fecha);
+    int dias = DateTime.now().difference(fechaBD).inDays;
+
+    if (dias == 0) return "(hoy)";
+    if (dias == 1) return "(hace 1 día)";
+    return "(hace $dias días)";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -304,10 +333,41 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                dateSaveDBRocky != null
+                    ? "Fecha de cargue BD sistema: $dateSaveDBRocky ${calcularDias(dateSaveDBRocky!)}"
+                    : "Fecha de cargue BD sistema: No disponible",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                dateSaveDBSigires != null
+                    ? "Fecha de cargue BD SIGIRES: $dateSaveDBSigires ${calcularDias(dateSaveDBSigires!)}"
+                    : "Fecha de cargue BD SIGIRES: No disponible",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            const Text(
               "Rocky • Versión 1.1",
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,

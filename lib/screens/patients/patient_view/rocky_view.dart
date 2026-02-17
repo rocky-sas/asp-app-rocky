@@ -89,7 +89,30 @@ class RockyView extends StatelessWidget {
     final p = paciente;
 
     if (p == null) {
-      return const Center(child: Text("Sin información"));
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline, color: Colors.grey),
+              SizedBox(width: 8),
+              Text(
+                "Sin información",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black54,
+                ),
+              ),
+              SizedBox(height: 200),
+            ],
+          ),
+        ),
+      );
     }
 
     DateTime? parseFecha(dynamic valor) {
