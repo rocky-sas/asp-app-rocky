@@ -19,89 +19,129 @@ class SigiresView extends StatelessWidget {
       return const Center(child: Text("Sin información"));
     }
 
+    final sexo = p['SEXO']?.toString().toUpperCase().trim();
+
+    print("🔎 Keys recibidas:");
+    print(p.keys);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 10),
 
-          buildCard(
-            icon: Icons.person,
-            title: "Nombre",
-            content: valorSeguro(p, 'Nombre'),
+          /// 👤 NOMBRES
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                  child: Text(valorSeguro(p, 'PRIMER_NOMBRE'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold))),
+              const SizedBox(width: 10),
+              Flexible(
+                  child: Text(valorSeguro(p, 'SEGUNDO_NOMBRE'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold))),
+            ],
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                  child: Text(valorSeguro(p, 'PRIMER_APELLIDO'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold))),
+              const SizedBox(width: 10),
+              Flexible(
+                  child: Text(valorSeguro(p, 'SEGUNDO_APELLIDO'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold))),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: valorSeguro(p, 'TIPO_ID'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(text: " ${valorSeguro(p, 'NUMERO_ID')}"),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text("Edad: ${valorSeguro(p, 'EDAD')}"),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Sexo: ${(sexo == null || sexo.isEmpty) ? 'N/A' : (sexo == 'F' ? 'F' : 'M')}",
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 20), // espacio entre columnas
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Nto: ${valorSeguro(p, 'FECHA_NACIMIENTO')}"),
+                    const SizedBox(height: 4),
+                    Text("Tel: ${valorSeguro(p, 'TELEFONO')}"),
+                    const SizedBox(height: 4),
+                    Text("EPS: ${valorSeguro(p, 'REGIMEN')}"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
 
           buildCard(
             icon: Icons.badge,
-            title: "Identificación",
-            content: valorSeguro(p, 'Identificacion'),
+            title: "Control de placa bacteriana",
+            content: valorSeguro(p, 'CONTROL_PLACA'),
           ),
 
           buildCard(
             icon: Icons.phone,
-            title: "Teléfono",
-            content: valorSeguro(p, 'Telefono'),
+            title: "Control recién nacidos",
+            content: valorSeguro(p, 'CONTROL_RN'),
           ),
-
-          const SizedBox(height: 10),
 
           buildCard(
             icon: Icons.task_alt,
-            title: "Actividades pendientes",
-            content: valorSeguro(p, 'ActividadesPendientes'),
+            title: "Consulta crecimiento y desarrollo",
+            content: valorSeguro(p, 'CRECIMIENTO_DESARROLLO'),
           ),
 
           buildCard(
             icon: Icons.biotech,
-            title: "Laboratorios pendientes",
-            content: valorSeguro(p, 'LaboratoriosPendientes'),
+            title: "Consulta joven primera vez",
+            content: valorSeguro(p, 'CONSULTA_JOVEN'),
           ),
 
-          const SizedBox(height: 10),
-
-          /// 🔽 ACTIVIDADES REALIZADAS
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Theme(
-              data: Theme.of(context)
-                  .copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(
-                    horizontal: 22, vertical: 14),
-                leading: const Icon(
-                  Icons.checklist,
-                  color: Colors.blue,
-                  size: 32,
-                ),
-                title: const Text(
-                  "Actividades realizadas",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                childrenPadding: const EdgeInsets.all(16),
-                children: [
-
-                  itemExamen("Citología", p["FechaCitologia"]),
-                  itemExamen("Curso de vida", p["FechaCursoVida"]),
-                  itemExamen("S. O. Mat. Fe", p["FechaSanOcu"]),
-                  itemExamen("Hemograma jóvenes", p["FechaHemoJov"]),
-                  itemExamen("Detartaje", p["FechaDetartaje"]),
-                  itemExamen("Control placa", p["FechaControlPlaca"]),
-                  itemExamen("Flúor", p["FechaFluor"]),
-                  itemExamen("Paquete labs", p["FechaPaqLabs"]),
-                  itemExamen("Sellantes", p["FechaSellantes"]),
-                  itemExamen("Consulta odont.", p["FechaConsultaOdon"]),
-                  itemExamen("Plan familiar", p["FechaPlanFami"]),
-                ],
-              ),
-            ),
+          buildCard(
+            icon: Icons.biotech,
+            title: "Consulta adulto primera vez",
+            content: valorSeguro(p, 'CONSULTA_ADULTO'),
           ),
 
           const SizedBox(height: 20),
@@ -110,7 +150,6 @@ class SigiresView extends StatelessWidget {
     );
   }
 
-  /// 🔹 CARD reutilizable
   Widget buildCard({
     required IconData icon,
     required String title,
@@ -119,38 +158,11 @@ class SigiresView extends StatelessWidget {
     return Card(
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(icon, color: Colors.blue),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(content),
-      ),
-    );
-  }
-
-  /// 🔹 ITEM EXAMEN
-  Widget itemExamen(String nombre, dynamic fecha) {
-    final tieneFecha =
-        fecha != null && fecha.toString().trim().isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle_outline,
-              color: Colors.green, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              "$nombre: ${tieneFecha ? fecha.toString() : 'No realizado'}",
-            ),
-          ),
-        ],
       ),
     );
   }

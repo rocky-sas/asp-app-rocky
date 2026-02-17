@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:rocky_offline_sdk/screens/home/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rocky_offline_sdk/common/custom_modal.dart';
 
 /// Pantalla de inicio de sesión para validar acceso a la aplicación.
 ///
@@ -29,8 +30,7 @@ class LoginScreen extends StatefulWidget {
 /// - [mostrarSubtitulo]: si es `true`, mostrará un subtítulo adicional.
 /// - [subtitulo]: texto opcional que aparece debajo del mensaje principal.
 class _LoginScreenState extends State<LoginScreen> {
-
-    @override
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-    Future<void> _initScreen() async {
+  Future<void> _initScreen() async {
     await _cargarDeviceId();
   }
 
@@ -54,95 +54,10 @@ class _LoginScreenState extends State<LoginScreen> {
       deviceIdBackend = storedId ?? '---';
     });
   }
+
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
   bool _passwordVisible = false;
-
-  Future<void> mostrarMensajeModal(
-    BuildContext context,
-    String mensaje, {
-    bool exito = true,
-    bool mostrarSubtitulo = false,
-    String? subtitulo,
-  }) {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: 280,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    exito ? Icons.check_circle_outline : Icons.error_outline,
-                    color: exito ? Colors.green : Colors.red,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    mensaje,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (mostrarSubtitulo && subtitulo != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      subtitulo,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007BFF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
-                        'Continuar',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   /// Inicia el proceso de autenticación del usuario.
   ///
@@ -158,8 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
       final inputPassword = passwordController.text.trim();
       if (inputPassword.isEmpty) {
         await mostrarMensajeModal(
-            context, 'Por favor ingresa la clave, no puede estar vacía.',
-            exito: false);
+          context,
+          mensaje: 'Por favor ingresa la clave, no puede estar vacía.',
+          titulo: "Error",
+          tipo: TipoMensaje.error,
+        );
         return;
       }
 
@@ -167,16 +85,23 @@ class _LoginScreenState extends State<LoginScreen> {
       final storedData = prefs.getString('device_validation');
 
       if (storedData == null) {
-        await mostrarMensajeModal(context, 'Error: No hay datos de validación',
-            exito: false);
+        await mostrarMensajeModal(
+          context,
+          mensaje: 'Error: No hay datos de validación',
+          titulo: "Error",
+          tipo: TipoMensaje.error,
+        );
         return;
       }
 
       final data = jsonDecode(storedData);
       if (data["password"] != inputPassword) {
         await mostrarMensajeModal(
-            context, 'Contraseña incorrecta, vuelve a intentarlo.',
-            exito: false);
+          context,
+          mensaje: 'Contraseña incorrecta, vuelve a intentarlo.',
+          titulo: "Error",
+          tipo: TipoMensaje.error,
+        );
         return;
       }
 
@@ -188,9 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await mostrarMensajeModal(
         context,
-        '¡Bienvenido!\n\n$nombreIPS',
-        mostrarSubtitulo: true,
-        subtitulo: 'Sesión iniciada correctamente',
+        titulo:'¡Bienvenido!\n\n$nombreIPS',
+        tipo: TipoMensaje.exito,
+        mensaje: 'Sesión iniciada correctamente',
       );
 
       // Navegar al FormScreen
@@ -314,11 +239,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-                const SizedBox(height: 16),
-                Text(
-                  "Rocky • Versión 1.1 • Id: $deviceIdBackend",
-                  style: const TextStyle(fontWeight: FontWeight.bold,color: Colors.white, fontSize: 12),
-                ),
+            const SizedBox(height: 16),
+            Text(
+              "Rocky • Versión 1.1 • Id: $deviceIdBackend",
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 12),
+            ),
           ],
         ),
       ),

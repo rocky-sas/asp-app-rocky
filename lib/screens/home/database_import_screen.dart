@@ -357,7 +357,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       final DateTime fechaExpiracion =
           DateTime.now().add(const Duration(days: 8));
       await prefs.setString(
-          'expiration_date', fechaExpiracion.toIso8601String());
+          'expiration_date_sigires', fechaExpiracion.toIso8601String());
 
       return true;
     } catch (e) {
@@ -368,6 +368,10 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
           tipo: TipoMensaje.error);
       return false;
     }
+  }
+
+  bool archivoSigiresCargado() {
+    return nombreArchivoDBSIGIRES != null && rutaArchivoTemporalSIGIRES != null;
   }
 
   @override
@@ -494,10 +498,25 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                             titulo: "Éxito",
                                             tipo: TipoMensaje.exito,
                                           );
+                                          if (!mounted) return;
 
-                                          if (mounted) {
-                                            Navigator.pop(context); // ahora sí
-                                          }
+                                          // ✅ Validar si SIGIRES está cargado
+                                          final sigiresCargado =
+                                              nombreArchivoDBSIGIRES != null &&
+                                                  rutaArchivoTemporalSIGIRES !=
+                                                      null;
+
+                                          await mostrarMensajeModal(
+                                            context,
+                                            mensaje: sigiresCargado
+                                                ? "La base de datos de SIGIRES ya está cargada. No olvide darle guardar."
+                                                : "No se le olvide cargar la base de datos de SIGIRES si la necesita",
+                                            titulo: "Información",
+                                            tipo: TipoMensaje.info,
+                                          );
+
+                                          // if (!mounted) return;
+                                          // Navigator.pop(context);
                                         }
                                       } else {
                                         mostrarMensajeModal(context,
@@ -644,6 +663,19 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                         ),
                         const SizedBox(height: 24),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const SizedBox(
+                  width: double.infinity,
+                  child: const Text(
+                    "Rocky • Versión 1.1",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

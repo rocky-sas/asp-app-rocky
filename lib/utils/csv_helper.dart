@@ -108,6 +108,58 @@ class CsvHelper {
     return null;
   }
 
+  static Future<Map<String, dynamic>?> getPacienteByIdSigires(
+      String id, File file) async {
+    final lines = await file.readAsLines(encoding: latin1);
+    if (lines.isEmpty) return null;
+
+    final delimiter = _detectDelimiter(lines[0]);
+
+    final header = lines[0].split(delimiter).map((e) => e.trim()).toList();
+
+    // Mapa con índice de cada columna
+    int getIndex(String columnName) => header
+        .indexWhere((h) => h.trim().toUpperCase() == columnName.toUpperCase());
+
+    final indexNumeroId = getIndex('NUMERO_ID');
+
+    if (indexNumeroId == -1) {
+      print("❌ No existe columna NUMERO_ID");
+      return null;
+    }
+
+    final idBuscado = id.trim();
+
+    for (int i = 1; i < lines.length; i++) {
+      final fields = lines[i].split(delimiter).map((e) => e.trim()).toList();
+
+      if (fields.length > indexNumeroId && fields[indexNumeroId] == idBuscado) {
+        final paciente = {
+          "TIPO_ID": fields[getIndex('TIPO_ID')],
+          "NUMERO_ID": fields[getIndex('NUMERO_ID')],
+          "PRIMER_APELLIDO": fields[getIndex('PRIMER_APELLIDO')],
+          "SEGUNDO_APELLIDO": fields[getIndex('SEGUNDO_APELLIDO')],
+          "PRIMER_NOMBRE": fields[getIndex('PRIMER_NOMBRE')],
+          "SEGUNDO_NOMBRE": fields[getIndex('SEGUNDO_NOMBRE')],
+          "FECHA_NACIMIENTO": fields[getIndex('FECHA_NACIMIENTO')],
+          "SEXO": fields[getIndex('SEXO')],
+          "EDAD": fields[getIndex('EDAD')],
+          "TELEFONO": fields[getIndex('TELEFONO')],
+          "REGIMEN": fields[getIndex('REGIMEN')],
+          "CONTROL_PLACA": fields[getIndex('Control de Placa Bacteriana')],
+          "CONTROL_RN": fields[getIndex('Control Recién Nacido')],
+          "CRECIMIENTO_DESARROLLO": fields[
+              getIndex('Consulta de Crecimiento y Desarrollo Primera vez')],
+          "CONSULTA_JOVEN": fields[getIndex('Consulta de Joven Primera vez')],
+          "CONSULTA_ADULTO": fields[getIndex('Consulta de Adulto Primera vez')],
+        };
+        return paciente;
+      }
+    }
+
+    return null;
+  }
+
   /// Verifica si el archivo CSV cargado ha expirado.
   ///
   /// Se asume que en la **quinta columna** (`row[4]`) existe un valor que

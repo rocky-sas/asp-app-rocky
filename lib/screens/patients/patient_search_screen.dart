@@ -118,7 +118,7 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
 
       if (widget.dbFileSigires != null) {
         pacienteSigires =
-            await CsvHelper.getPacienteById(id, widget.dbFileSigires!);
+            await CsvHelper.getPacienteByIdSigires(id, widget.dbFileSigires!);
       }
 
       if (pacienteRocky == null && pacienteSigires == null) {
@@ -313,6 +313,7 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

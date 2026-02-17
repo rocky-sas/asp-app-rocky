@@ -134,9 +134,9 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
 
     try {
       final response = await http.post(
-        // Uri.parse(
-        //     "https://b-rocky-intranet.onrender.com/api/v1/validate_key_device"),
-        Uri.parse("http://192.168.1.185:8000/api/v1/validate_key_device"),
+        Uri.parse(
+            "https://b-rocky-intranet.onrender.com/api/v1/validate_key_device"),
+        // Uri.parse("http://192.168.1.185:8000/api/v1/validate_key_device"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(
             {"cod_ips": codIPS, "device_id": deviceId, "key": clave}),

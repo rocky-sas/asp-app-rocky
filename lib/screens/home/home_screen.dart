@@ -160,8 +160,7 @@ class _FormScreenState extends State<FormScreen> {
     }
 
     if (!rockyValido && !sigiresValido) {
-      mostrarMensajeModal(
-          context,
+      mostrarMensajeModal(context,
           mensaje: "Los archivos no existen en el dispositivo.",
           titulo: "Error",
           tipo: TipoMensaje.error);
@@ -269,6 +268,9 @@ class _FormScreenState extends State<FormScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold, 
+                          ),
                         ),
                         onPressed: () async {
                           print('[DEBUG] Botón Cargar DB presionado');
@@ -324,14 +326,16 @@ class _FormScreenState extends State<FormScreen> {
                             if (csvPath.isNotEmpty) {
                               mostrarMensajeModal(
                                 context,
-                                mensaje:'El archivo CSV ha sido guardado en la carpeta de Descargas:\n\n$csvPath',
+                                mensaje:
+                                    'El archivo CSV ha sido guardado en la carpeta de Descargas:\n\n$csvPath',
                                 titulo: 'CSV Exportado Exitosamente',
                                 tipo: TipoMensaje.exito,
                               );
                             } else {
                               mostrarMensajeModal(
                                 context,
-                                mensaje: 'No se pudo exportar el archivo CSV. Intente nuevamente.',
+                                mensaje:
+                                    'No se pudo exportar el archivo CSV. Intente nuevamente.',
                                 titulo: 'Error al Exportar',
                                 tipo: TipoMensaje.error,
                               );
@@ -339,7 +343,8 @@ class _FormScreenState extends State<FormScreen> {
                           } else {
                             mostrarMensajeModal(
                               context,
-                              mensaje: 'Debes otorgar permisos de almacenamiento para exportar el archivo.',
+                              mensaje:
+                                  'Debes otorgar permisos de almacenamiento para exportar el archivo.',
                               titulo: 'Permiso denegado',
                               tipo: TipoMensaje.error,
                             );
@@ -353,6 +358,9 @@ class _FormScreenState extends State<FormScreen> {
                           minimumSize: const Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold, 
                           ),
                         ),
                       ),
@@ -368,6 +376,9 @@ class _FormScreenState extends State<FormScreen> {
                           minimumSize: const Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold, 
                           ),
                         ),
                       ),

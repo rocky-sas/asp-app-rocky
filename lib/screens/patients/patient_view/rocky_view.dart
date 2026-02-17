@@ -112,18 +112,18 @@ class RockyView extends StatelessWidget {
       return null;
     }
 
-    final fechaCitologia = parseFecha(p?['CitologiaAdnVph']);
-    final fechaCitologiaPapa = parseFecha(p?['CitologiaPapan']);
-    final fechaConCursoVida = parseFecha(p?['ConCursoVida']);
-    final fechaSanOcuMatFe = parseFecha(p?['SanOcuMatFe']);
-    final fechaHemoHemaJov = parseFecha(p?['SanOcuMatFe']);
-    final fechaDetartraje = parseFecha(p?['Detartraje']);
-    final fechaConPlaca = parseFecha(p?['ConPlaca']);
-    final fechaFluor = parseFecha(p?['Fluor']);
-    final fechaPaqLabs = parseFecha(p?['PaqLabs']);
-    final fechaSellantes = parseFecha(p?['Sellantes']);
-    final fechaConsOdont = parseFecha(p?['ConsOdont']);
-    final fechaPlanFami = parseFecha(p?['PlanFami']);
+    final fechaCitologia = parseFecha(p['CitologiaAdnVph']);
+    final fechaCitologiaPapa = parseFecha(p['CitologiaPapan']);
+    final fechaConCursoVida = parseFecha(p['ConCursoVida']);
+    final fechaSanOcuMatFe = parseFecha(p['SanOcuMatFe']);
+    final fechaHemoHemaJov = parseFecha(p['SanOcuMatFe']);
+    final fechaDetartraje = parseFecha(p['Detartraje']);
+    final fechaConPlaca = parseFecha(p['ConPlaca']);
+    final fechaFluor = parseFecha(p['Fluor']);
+    final fechaPaqLabs = parseFecha(p['PaqLabs']);
+    final fechaSellantes = parseFecha(p['Sellantes']);
+    final fechaConsOdont = parseFecha(p['ConsOdont']);
+    // final fechaPlanFami = parseFecha(p['PlanFami']);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -150,7 +150,7 @@ class RockyView extends StatelessWidget {
                   Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
                 leading: const Icon(
                   Icons.checklist,
                   color: Colors.blue,
@@ -243,7 +243,7 @@ class RockyView extends StatelessWidget {
   }) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 9),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

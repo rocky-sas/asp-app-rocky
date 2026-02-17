@@ -166,9 +166,9 @@ class _RegistroIPSScreenState extends State<RegistroIPSScreen> {
       };
 
       final response = await http.post(
-        Uri.parse("http://192.168.1.185:8000/api/v1/view_generate_key_device"),
-        // Uri.parse(
-        //     "https://b-rocky-intranet.onrender.com/api/v1/view_generate_key_device"),
+        // Uri.parse("http://192.168.1.185:8000/api/v1/view_generate_key_device"),
+        Uri.parse(
+            "https://b-rocky-intranet.onrender.com/api/v1/view_generate_key_device"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
