@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rocky_offline_sdk/screens/auth/device_registration_screen.dart';
 import 'package:rocky_offline_sdk/screens/home/home_screen.dart';
+import 'package:rocky_offline_sdk/screens/SplashScreen.dart';
 
 /// Punto de entrada principal de la aplicación Rocky Offline SDK.
 /// Esta aplicación permite la gestión y consulta de pacientes en modo offline
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const RegistroIPSScreen(),
+        '/': (context) => const SplashScreen(),
         '/form': (context) => FormScreen(),
       },
     );

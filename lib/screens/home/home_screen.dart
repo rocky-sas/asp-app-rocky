@@ -69,7 +69,7 @@ class _FormScreenState extends State<FormScreen> {
       if (existe) {
         // print(
         //     '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
-        await DatabaseService.loadCsvFile(archivo);
+        await DatabaseService.loadCsvRocky(archivo);
         setState(() {
           archivoSeleccionado = archivo;
         });
@@ -95,7 +95,7 @@ class _FormScreenState extends State<FormScreen> {
       if (existe) {
         print(
             '[DEBUG] _cargarRutaGuardada: Cargando archivo en DatabaseService.loadCsvFile');
-        await DatabaseService.loadCsvFile(archivo);
+        await DatabaseService.loadCsvSigires(archivo);
         setState(() {
           archivoSeleccionado = archivo;
         });
@@ -169,11 +169,11 @@ class _FormScreenState extends State<FormScreen> {
     }
 
     if (rockyValido) {
-      await DatabaseService.loadCsvFile(archivoRocky!);
+      await DatabaseService.loadCsvRocky(archivoRocky!);
     }
 
     if (sigiresValido) {
-      await DatabaseService.loadCsvFile(archivoSigires!);
+      await DatabaseService.loadCsvSigires(archivoSigires!);
     }
 
     print("[DEBUG] Navegando a BuscarPacienteScreen");
@@ -244,7 +244,7 @@ class _FormScreenState extends State<FormScreen> {
                         height: 80,
                       ),
                       const Text(
-                        'Gestión de inasistencia a actividades de la Resolución No.3280',
+                        'Gestión de inasistencia a actividades de la Resolución 3280',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -254,13 +254,13 @@ class _FormScreenState extends State<FormScreen> {
                       ),
                       const SizedBox(height: 30),
                       Text(
-                        "Selecciona una opción para comenzar",
+                        "Seleccione una opción para comenzar",
                         style: TextStyle(color: Colors.black),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.upload_file),
-                        label: const Text("Cargar DB"),
+                        label: const Text("Cargar bases de datos"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
@@ -280,18 +280,17 @@ class _FormScreenState extends State<FormScreen> {
                               builder: (_) => const CargarBaseDatosScreen(),
                             ),
                           );
-
-                          print(
-                              '[DEBUG] Valor retornado de CargarBaseDatosScreen: $ruta');
+                          // print(
+                          //     '[DEBUG] Valor retornado de CargarBaseDatosScreen: $ruta');
                           if (ruta != null) {
                             final archivo = File(ruta);
                             final existe = await archivo.exists();
-                            print(
-                                '[DEBUG] Archivo retornado existe: $existe, path: ${archivo.path}');
+                            // print(
+                            //     '[DEBUG] Archivo retornado existe: $existe, path: ${archivo.path}');
                             if (existe) {
-                              print(
-                                  '[DEBUG] Llamando a DatabaseService.loadCsvFile');
-                              await DatabaseService.loadCsvFile(archivo);
+                              // print(
+                              //     '[DEBUG] Llamando a DatabaseService.loadCsvFile');
+                              await DatabaseService.loadCsvRocky(archivo);
                               final prefs =
                                   await SharedPreferences.getInstance();
                               await prefs.setString(
@@ -322,7 +321,7 @@ class _FormScreenState extends State<FormScreen> {
                           final storageStatus =
                               await Permission.storage.request();
                           if (status.isGranted || storageStatus.isGranted) {
-                            final csvPath = await DatabaseService.exportCsv();
+                            final csvPath = await DatabaseService.exportCsv(isRocky: true);
                             if (csvPath.isNotEmpty) {
                               mostrarMensajeModal(
                                 context,
@@ -411,7 +410,7 @@ class _FormScreenState extends State<FormScreen> {
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      "La base de datos podrá ser cargada únicamente el día de la importación.",
+                                      "La base de datos podrá ser cargada máximo hasta 1 dia después de su generación.",
                                       style: TextStyle(color: Colors.black),
                                     ),
                                   ),

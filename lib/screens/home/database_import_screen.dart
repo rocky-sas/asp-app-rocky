@@ -36,6 +36,34 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
   bool _isPickerActive = false;
   bool isLoading = false;
 
+  Future<String?> generarMd5ParaFecha(DateTime fecha) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final codigoIPS = prefs.getString('cod_ips');
+
+      if (codigoIPS == null) return null;
+
+      final excel1900Start = DateTime(1900, 1, 1);
+
+      final daysSince1900 = fecha.difference(excel1900Start).inDays + 2;
+
+      final data = "$codigoIPS-$daysSince1900";
+
+      final url = "https://b-rocky-intranet.onrender.com/api/v1/md5?data=$data";
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        return responseData['md5'];
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Obtiene el hash MD5 esperado para la fecha actual y el código IPS almacenado.
   ///
   /// El MD5 se genera a partir de la concatenación `IPS-fecha` (donde la fecha
@@ -81,6 +109,23 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     } catch (e) {
       return null;
     }
+  }
+
+  Future<List<String>> getMd5ValidosDosDias() async {
+    final ahora = DateTime.now();
+
+    final md5Hoy = await generarMd5ParaFecha(ahora);
+    final md5Ayer =
+        await generarMd5ParaFecha(ahora.subtract(Duration(days: 1)));
+
+    final md5Anteayer =
+        await generarMd5ParaFecha(ahora.subtract(Duration(days: 2)));
+
+    return [
+      if (md5Hoy != null) md5Hoy,
+      if (md5Ayer != null) md5Ayer,
+      if (md5Anteayer != null) md5Anteayer,
+    ];
   }
 
   /// Verifica con el backend si la clave del dispositivo sigue vigente.
@@ -165,8 +210,8 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       }
 
       // Obtener el MD5 esperado
-      final expectedMd5 = await getExpectedMd5Hash();
-      if (expectedMd5 == null) {
+      final md5Validos = await getMd5ValidosDosDias();
+      if (md5Validos == null) {
         return;
       }
 
@@ -186,17 +231,21 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
           return;
         }
 
-        // El nombre del archivo debe ser exactamente el MD5 más la extensión .csv
-        final expectedFileName = '$expectedMd5.csv';
+        final fileNameLower = fileName.toLowerCase();
 
-        // Validar que el nombre del archivo coincida con el MD5 esperado
-        if (fileName.toLowerCase() != expectedFileName.toLowerCase()) {
+        final esValido = md5Validos.any(
+          (md5) => fileNameLower == "$md5.csv".toLowerCase(),
+        );
+
+        if (!esValido) {
           if (mounted) {
-            mostrarMensajeModal(context,
-                mensaje:
-                    "El nombre del archivo no es válido para la fecha actual. Asegúrate de que el archivo sea el correcto.",
-                titulo: 'Error',
-                tipo: TipoMensaje.error);
+            mostrarMensajeModal(
+              context,
+              mensaje:
+                  "El archivo no es válido para los últimos días permitidos.",
+              titulo: 'Error',
+              tipo: TipoMensaje.error,
+            );
           }
           return;
         }
@@ -342,6 +391,13 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
     }
   }
 
+  // String _detectDelimiter(String line) {
+  //   if (line.contains(';')) return ';';
+  //   if (line.contains(',')) return ',';
+  //   if (line.contains('\t')) return '\t';
+  //   return ','; // por defecto
+  // }
+
   Future<bool> guardarArchivoSeleccionadoSIGIRES() async {
     if (rutaArchivoTemporalSIGIRES == null || nombreArchivoDBSIGIRES == null) {
       await mostrarMensajeModal(context,
@@ -356,6 +412,23 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
       await File(rutaArchivoTemporalSIGIRES!).copy(savedCsvPath); // Debug
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('ruta_csv_guardada_sigires', savedCsvPath);
+      // final file = File(savedCsvPath);
+      // final lines = await file.readAsLines(encoding: latin1);
+
+      // if (lines.isNotEmpty) {
+      //   final delimiter = _detectDelimiter(lines[0]);
+
+      //   final header = lines[0]
+      //       .replaceAll('\uFEFF', '')
+      //       .split(delimiter)
+      //       .map((e) => e.trim())
+      //       .toList();
+
+      //   debugPrint("COLUMNAS ENCONTRADAS:");
+      //   for (var col in header) {
+      //     debugPrint(col);
+      //   }
+      // }
 
       // Establecer la fecha de expiración (30 días desde hoy)
       final DateTime fechaExpiracion =
@@ -429,17 +502,29 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                       children: [
                         Image.asset(
                           'assets/images/imagenInicio.png',
-                          width: 80,
-                          height: 80,
+                          width: 70,
+                          height: 70,
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         const Row(
                           children: [
                             Expanded(
                               child: Text(
                                 "Cargar archivo de pacientes de Rocky",
+                                textAlign: TextAlign.center,
                                 style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Haga click sobre el clip para buscar la base de datos a cargar",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w100, fontSize: 15),
                               ),
                             ),
                           ],
@@ -473,7 +558,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -508,7 +593,6 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                           );
                                           if (!mounted) return;
 
-                                          // ✅ Validar si SIGIRES está cargado
                                           final sigiresCargado =
                                               nombreArchivoDBSIGIRES != null &&
                                                   rutaArchivoTemporalSIGIRES !=
@@ -518,7 +602,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                                             context,
                                             mensaje: sigiresCargado
                                                 ? "La base de datos de SIGIRES ya está cargada. No olvide darle guardar."
-                                                : "No se le olvide cargar la base de datos de SIGIRES si la necesita",
+                                                : "No olvide cargar la base de datos de SIGIRES si la necesita",
                                             titulo: "Información",
                                             tipo: TipoMensaje.info,
                                           );
@@ -563,6 +647,18 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                               child: Text(
                                 "Cargar archivo de pacientes de SIGIRES",
                                 style: TextStyle(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Haga click sobre el clip para buscar la base de datos a cargar",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w100, fontSize: 15),
                               ),
                             ),
                           ],
@@ -601,7 +697,7 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
                         //   "El archivo debe contener columnas como: numeroDocumento, tipoDocumento, nombres, birthday, edad, sexo, cursoVida, actividadesPendientes, laboratoriosPendientes",
                         //   style: TextStyle(fontSize: 12, color: Colors.black54),
                         // ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(

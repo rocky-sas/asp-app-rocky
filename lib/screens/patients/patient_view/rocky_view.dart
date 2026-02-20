@@ -135,17 +135,17 @@ class RockyView extends StatelessWidget {
       return null;
     }
 
-    final fechaCitologia = parseFecha(p['CitologiaAdnVph']);
-    final fechaCitologiaPapa = parseFecha(p['CitologiaPapan']);
-    final fechaConCursoVida = parseFecha(p['ConCursoVida']);
-    final fechaSanOcuMatFe = parseFecha(p['SanOcuMatFe']);
-    final fechaHemoHemaJov = parseFecha(p['SanOcuMatFe']);
-    final fechaDetartraje = parseFecha(p['Detartraje']);
-    final fechaConPlaca = parseFecha(p['ConPlaca']);
-    final fechaFluor = parseFecha(p['Fluor']);
-    final fechaPaqLabs = parseFecha(p['PaqLabs']);
-    final fechaSellantes = parseFecha(p['Sellantes']);
-    final fechaConsOdont = parseFecha(p['ConsOdont']);
+    final fechaCitologia = parseFecha(p['ADNVPHFecha']);
+    final fechaCitologiaPapa = parseFecha(p['CitologiaFecha']);
+    final fechaConCursoVida = parseFecha(p['CursoVidaFecha']);
+    final fechaSanOcuMatFe = parseFecha(p['SangreOcultaFecha']);
+    final fechaHemoHemaJov = parseFecha(p['HemoJovFecha']);
+    final fechaDetartraje = parseFecha(p['DetartrajesFecha']);
+    final fechaConPlaca = parseFecha(p['PlacaFecha']);
+    final fechaFluor = parseFecha(p['FluorAplicacionFecha']);
+    final fechaPaqLabs = parseFecha(p['PaqueteLabsFecha']);
+    final fechaSellantes = parseFecha(p['SellanteFecha']);
+    final fechaConsOdont = parseFecha(p['ConsOdontoFecha']);
     // final fechaPlanFami = parseFecha(p['PlanFami']);
 
     return SingleChildScrollView(
@@ -194,7 +194,7 @@ class RockyView extends StatelessWidget {
                     fecha: fechaConCursoVida,
                   ),
                   itemExamen(
-                    nombre: "Hemograma y hematocrito en jóvenes",
+                    nombre: "Hb y hto en niñas de 10 a 17 años",
                     icon: Icons.check_circle_outline,
                     fecha: fechaHemoHemaJov,
                   ),
@@ -229,7 +229,7 @@ class RockyView extends StatelessWidget {
                     fecha: fechaConPlaca,
                   ),
                   itemExamen(
-                    nombre: "Aplicacion flúor",
+                    nombre: "Aplicación flúor",
                     icon: Icons.check_circle_outline,
                     fecha: fechaFluor,
                   ),

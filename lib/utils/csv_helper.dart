@@ -121,38 +121,44 @@ class CsvHelper {
     int getIndex(String columnName) => header
         .indexWhere((h) => h.trim().toUpperCase() == columnName.toUpperCase());
 
-    final indexNumeroId = getIndex('NUMERO_ID');
-
+    final indexNumeroId = getIndex('NRO IDENTIFICACION');
+    
     if (indexNumeroId == -1) {
       print("❌ No existe columna NUMERO_ID");
       return null;
     }
 
     final idBuscado = id.trim();
-
+    
     for (int i = 1; i < lines.length; i++) {
       final fields = lines[i].split(delimiter).map((e) => e.trim()).toList();
 
       if (fields.length > indexNumeroId && fields[indexNumeroId] == idBuscado) {
         final paciente = {
-          "TIPO_ID": fields[getIndex('TIPO_ID')],
-          "NUMERO_ID": fields[getIndex('NUMERO_ID')],
-          "PRIMER_APELLIDO": fields[getIndex('PRIMER_APELLIDO')],
-          "SEGUNDO_APELLIDO": fields[getIndex('SEGUNDO_APELLIDO')],
-          "PRIMER_NOMBRE": fields[getIndex('PRIMER_NOMBRE')],
-          "SEGUNDO_NOMBRE": fields[getIndex('SEGUNDO_NOMBRE')],
-          "FECHA_NACIMIENTO": fields[getIndex('FECHA_NACIMIENTO')],
+          "TIPO_ID": fields[getIndex('TIPO DOCUMENTO')],
+          "NUMERO_ID": fields[getIndex('NRO IDENTIFICACION')],
+          "PRIMER_APELLIDO": fields[getIndex('PRIMER APELLIDO')],
+          "SEGUNDO_APELLIDO": fields[getIndex('SEGUNDO APELLIDO')],
+          "PRIMER_NOMBRE": fields[getIndex('PRIMER NOMBRE')],
+          "SEGUNDO_NOMBRE": fields[getIndex('SEGUNDO NOMBRE')],
+          "FECHA_NACIMIENTO": fields[getIndex('FECHA NACIMIENTO')],
           "SEXO": fields[getIndex('SEXO')],
           "EDAD": fields[getIndex('EDAD')],
-          "TELEFONO": fields[getIndex('TELEFONO')],
+          "TELEFONO": fields[getIndex('TELEFONO MAS USADO')],
+          "CURSO_VIDA": fields[getIndex('CURSO DE VIDA')],
           "REGIMEN": fields[getIndex('REGIMEN')],
-          "CONTROL_PLACA": fields[getIndex('Control de Placa Bacteriana')],
-          "CONTROL_RN": fields[getIndex('Control Recién Nacido')],
-          "CRECIMIENTO_DESARROLLO": fields[
-              getIndex('Consulta de Crecimiento y Desarrollo Primera vez')],
-          "CONSULTA_JOVEN": fields[getIndex('Consulta de Joven Primera vez')],
-          "CONSULTA_ADULTO": fields[getIndex('Consulta de Adulto Primera vez')],
+          "VALORACION_INTERGRAL": fields[getIndex('VALORACION INTEGRAL')],
+          "VALORACION_ODONTOLOGIA": fields[getIndex('VALORACION ODONTOLOGIA')],
+          "FLUOR": fields[
+              getIndex('FLUOR')],
+          "SELLANTES": fields[getIndex('SELLANTES')],
+          "PLACA": fields[getIndex('PLACA')],
+          "DETARTRAJE": fields[getIndex('DETARTRAJE')],
+          "CITOLOGIA": fields[getIndex('CITOLOGIA')],
+          "PRUEBA_ADN_VPH": fields[getIndex('PRUEBA ADN-VPH')],
+          "SOMF": fields[getIndex('SOMF')],
         };
+        print(paciente);
         return paciente;
       }
     }

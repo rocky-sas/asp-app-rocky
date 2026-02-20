@@ -562,7 +562,7 @@ class _DetallePacienteScreenState extends State<DetallePacienteScreen>
     await printerHelper.imprimirConSeguridadCustom((bluetooth) async {
       // Marcar el status como true en el CSV
       await DatabaseService.updatePatientStatus(
-          widget.pacienteRocky?['NumeroId'], true);
+          widget.pacienteRocky?['NumeroId'], true, isRocky: true);
 
       bluetooth.printNewLine();
       bluetooth.printCustom("${p?['name_ips'] ?? 'Desconocido'}", 1, 1);
@@ -684,7 +684,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
         await launchUrl(Uri.parse(url));
         // Marcar el status como true en el CSV después de abrir WhatsApp
         await DatabaseService.updatePatientStatus(
-            widget.pacienteRocky?['NumeroId'], true);
+            widget.pacienteRocky?['NumeroId'], true, isRocky: true);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -860,7 +860,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                         ),
                                         TextSpan(
                                           text:
-                                              " ${valorSeguro(p, 'NumeroId')}",
+                                              " ${valorSeguro(pr, 'NumeroId')}",
                                         ),
                                       ],
                                     ),
@@ -929,7 +929,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                     TextSpan(
                                       children: [
                                         const TextSpan(
-                                          text: "Curso Vida: ",
+                                          text: "",
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
@@ -969,7 +969,7 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                             TextSpan(
                               children: [
                                 const TextSpan(
-                                  text: "EPS: ",
+                                  text: "",
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 TextSpan(
@@ -1155,7 +1155,6 @@ LABORATORIOS: ${p?['LaboratoriosPendientes'] ?? 'Ninguna'}
                                           );
                                         }
                                       }
-
                                       if (mounted) {
                                         setState(() {
                                           _isPrinting = false;

@@ -130,6 +130,14 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
         pacienteSigires =
             await CsvHelper.getPacienteByIdSigires(id, widget.dbFileSigires!);
       }
+      if (pacienteRocky == null) {
+        mostrarMensajeModal(
+          context,
+          mensaje: "Paciente no encontrado en las bases de datos cargadas en rocky.",
+          titulo: "Error",
+          tipo: TipoMensaje.error,
+        );
+      }
 
       if (pacienteRocky == null && pacienteSigires == null) {
         // print('[BuscarPaciente] No encontrado en ninguna base');
@@ -269,7 +277,7 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Ingresa el número de documento del paciente para buscar su información",
+                          "Ingrese el número de documento del paciente para buscar su información",
                           style: TextStyle(color: Colors.black54),
                         ),
                         const SizedBox(height: 24),
@@ -289,7 +297,7 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                           keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
                             prefixIcon: Icon(Icons.person),
-                            hintText: 'Ej: 1057000000, etc.',
+                            hintText: '',
                             hintStyle: TextStyle(
                               color: Colors.grey,
                               fontWeight: FontWeight.w500,
@@ -300,13 +308,13 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Presiona en buscar para filtrar la información del paciente",
+                          "Presione en buscar para filtrar la información del paciente.",
                           style: TextStyle(fontSize: 12, color: Colors.black54),
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
+                          child: ElevatedButton.icon(
                             onPressed: buscarPaciente,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -316,17 +324,19 @@ class _BuscarPacienteScreenState extends State<BuscarPacienteScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: const Text(
-                              "Buscar paciente",
-                              style: TextStyle(fontSize: 16),
+                            icon: const Icon(Icons.search),
+                            label: const Text(
+                              "Buscar",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
-                        if (error != null) ...[
-                          const SizedBox(height: 16),
-                          Text(error!,
-                              style: const TextStyle(color: Colors.red)),
-                        ],
+                        // if (error != null) ...[
+                        //   const SizedBox(height: 16),
+                        //   Text(error!,
+                        //       style: const TextStyle(color: Colors.red)),
+                        // ],
                       ],
                     ),
                   ),
