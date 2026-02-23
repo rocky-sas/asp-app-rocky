@@ -316,7 +316,7 @@ class _ValidarContrasenaScreenState extends State<ValidarContrasenaScreen> {
                           ),
                           SizedBox(height: 15),
                           Text(
-                            " - El uso de esta clave es responsabilidad del usuario del dispositivo")
+                            "- El uso de la información contendida en este aplicativo es responsabilidad del usuario y está definida en el acuerdo de voluntades firmado entre las partes.")
                         ],
                       ),
                     ),

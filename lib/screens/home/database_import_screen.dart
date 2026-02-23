@@ -114,17 +114,14 @@ class _CargarBaseDatosScreenState extends State<CargarBaseDatosScreen> {
   Future<List<String>> getMd5ValidosDosDias() async {
     final ahora = DateTime.now();
 
-    final md5Hoy = await generarMd5ParaFecha(ahora);
     final md5Ayer =
         await generarMd5ParaFecha(ahora.subtract(Duration(days: 1)));
 
-    final md5Anteayer =
-        await generarMd5ParaFecha(ahora.subtract(Duration(days: 2)));
-
+    final md5Hoy = await generarMd5ParaFecha(ahora);
+    
     return [
       if (md5Hoy != null) md5Hoy,
       if (md5Ayer != null) md5Ayer,
-      if (md5Anteayer != null) md5Anteayer,
     ];
   }
 
